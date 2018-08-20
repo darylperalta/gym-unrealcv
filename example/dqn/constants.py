@@ -5,7 +5,7 @@ RESTART_EP = 6000 # the episode number of the pre-trained model
 
 TRAIN = True # train the network
 USE_TARGET_NETWORK = False # use the target network
-SHOW = False # show the current state, reward and action
+SHOW = True # show the current state, reward and action
 MAP = False # show the trajectory in 2d map
 
 TF_DEVICE = '/gpu:0'
@@ -33,4 +33,3 @@ LOG_NAME_READ = 'log'
 weights_path = LOG_NAME_READ + '/model/dqn_ep' + str(RESTART_EP)+ '.h5'
 monitor_path = LOG_NAME_READ + '/monit` or/'+ str(RESTART_EP)
 params_json = LOG_NAME_READ + '/param/dqn_ep' + str(RESTART_EP) + '.json'
-

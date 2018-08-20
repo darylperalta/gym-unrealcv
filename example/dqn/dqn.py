@@ -41,11 +41,11 @@ class DeepQ:
         self.useTargetNetwork = useTargetNetwork
         self.count_steps = 0
         if K.backend() == 'tensorflow':
-            with KTF.tf.device(TF_DEVICE):
-                config = tf.ConfigProto()
-                config.gpu_options.allow_growth = True
-                KTF.set_session(tf.Session(config=config))
-                self.initNetworks()
+            # with KTF.tf.device(TF_DEVICE):
+                # config = tf.ConfigProto()
+                # config.gpu_options.allow_growth = True
+                # KTF.set_session(tf.Session(config=config))
+            self.initNetworks()
         else :
             self.initNetworks()
 
@@ -104,7 +104,7 @@ class DeepQ:
 
     def updateTargetNetwork(self):
         self.backupNetwork(self.model, self.targetModel)
-        print 'update target network'
+        print('update target network')
 
     # predict Q values for all the actions
     def getQValues(self, state):
@@ -183,9 +183,3 @@ class DeepQ:
         qValues = self.getQValues(observation)
         action = self.selectAction(qValues, explorationRate)
         return action
-
-
-
-
-
-

@@ -131,7 +131,7 @@ class UnrealCvRobotArm_base(gym.Env):
         msg = self.unrealcv.read_message()
         # 'hit ground' 'ReachmaxM2' 'ReachminM2'
         if len(msg) > 0:
-            print msg
+            print(msg)
             info['Collision'] = True
             self.count_collision += 1
             info['Done'] = False
@@ -148,7 +148,7 @@ class UnrealCvRobotArm_base(gym.Env):
                     info['Done'] = True
                     if 'move' in self.reward_type:
                         info['Reward'] = 10
-                        print 'move ball'
+                        print('move ball')
                 self.target_pose = info['TargetPose']
 
             if 'distance' in self.reward_type:
@@ -263,7 +263,7 @@ class UnrealCvRobotArm_base(gym.Env):
            import yaml
            setting = yaml.load(f)
        else:
-           print 'unknown type'
+           print('unknown type')
 
        #print setting
        self.cam_id = setting['cam_view_id']

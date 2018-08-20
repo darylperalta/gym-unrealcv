@@ -14,7 +14,7 @@ import random
 It is an env for active object tracking.
 
 State : raw color image and depth
-Action:  (linear velocity ,angle velocity) 
+Action:  (linear velocity ,angle velocity)
 Done : the relative distance or angle to target is larger than the threshold.
 Task: Learn to follow the target object(moving person) in the scene
 '''
@@ -32,7 +32,7 @@ class UnrealCvTracking_base(gym.Env):
                 resolution=(84, 84)
                 ):
 
-     print setting_file
+     print(setting_file)
      setting = self.load_env_setting(setting_file)
      self.docker = docker
      self.reset_type = reset_type
@@ -139,7 +139,7 @@ class UnrealCvTracking_base(gym.Env):
         if self.count_steps > self.max_steps:
            info['Done'] = True
            info['Maxstep'] = True
-           print 'Reach Max Steps'
+           print('Reach Max Steps')
 
         # save the trajectory
         self.trajectory.append(info['Pose'])
@@ -226,7 +226,7 @@ class UnrealCvTracking_base(gym.Env):
            import yaml
            setting = yaml.load(f)
        else:
-           print 'unknown type'
+           print('unknown type')
 
        #print setting
        self.cam_id = setting['cam_id']

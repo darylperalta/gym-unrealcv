@@ -143,7 +143,7 @@ class UnrealCvSearch_topview(gym.Env):
                 if info['Reward'] > 0 and self.test == False:
                     self.reset_module.success_waypoint(self.count_steps)
 
-                print 'Trigger Terminal!'
+                print('Trigger Terminal!')
         # if collision occurs, the episode is done and reward is -1
         else :
             # take action
@@ -184,7 +184,7 @@ class UnrealCvSearch_topview(gym.Env):
         if self.count_steps > self.max_steps:
            info['Done'] = True
            info['Maxstep'] = True
-           print 'Reach Max Steps'
+           print('Reach Max Steps')
 
         # save the trajectory
         self.trajectory.append(info['Pose'][:6])
@@ -306,7 +306,7 @@ class UnrealCvSearch_topview(gym.Env):
            import yaml
            setting = yaml.load(f)
        else:
-           print 'unknown type'
+           print('unknown type')
 
        #print setting
        self.cam_id = setting['cam_id']

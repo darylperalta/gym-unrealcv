@@ -5,10 +5,14 @@ import math
 import time
 import os
 import re
-import StringIO
+# import StringIO
 import PIL.Image
 
-
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+    from io import BytesIO
 
 ####TO DO#######
 ###the observation in memory replay only save the image dir instead of feature####
@@ -73,7 +77,7 @@ class UnrealCv(object):
 
     def check_connection(self):
         while (self.client.isconnected() is False):
-            print 'UnrealCV server is not running. Please try again'
+            print('UnrealCV server is not running. Please try again')
             self.client.connect()
 
     def show_img(self,img,title="raw_img"):
@@ -110,14 +114,16 @@ class UnrealCv(object):
         cmd = 'vget /camera/{cam_id}/depth npy'
         res = self.client.request(cmd.format(cam_id=cam_id))
 
-        depth = np.load(StringIO.StringIO(res))
+        #depth = np.load(StringIO.StringIO(res))
+        depth = np.load(BytesIO(res))
         depth[depth>100.0] = 0
         #self.show_img(depth,'depth')
         #return depth
         return np.expand_dims(depth,axis=-1)
 
     def read_png(self,res):
-        img = PIL.Image.open(StringIO.StringIO(res))
+        #img = PIL.Image.open(StringIO.StringIO(res))
+        img = PIL.Image.open(BytesIO(res))
         return np.asarray(img)
 
 

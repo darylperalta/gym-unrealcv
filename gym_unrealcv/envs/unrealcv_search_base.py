@@ -13,10 +13,10 @@ import random
 '''
 It is a general env for searching target object.
 
-State : raw color image and depth (640x480) 
-Action:  (linear velocity ,angle velocity , trigger) 
+State : raw color image and depth (640x480)
+Action:  (linear velocity ,angle velocity , trigger)
 Done : Collision or get target place or False trigger three times.
-Task: Learn to avoid obstacle and search for a target object in a room, 
+Task: Learn to avoid obstacle and search for a target object in a room,
       you can select the target name according to the Recommend object list as below
 
 Recommend object list in RealisticRendering
@@ -239,7 +239,9 @@ class UnrealCvSearch_base(gym.Env):
 
    def select_target_by_distance(self,current_pos, targets_pos):
        # find the nearest target, return distance and targetid
-       target_id = self.targets_pos.keys()[0]
+       # target_id = self.targets_pos.keys()[0]
+       target_id = list(self.targets_pos)[0]
+
        distance_min = self.get_distance(targets_pos[target_id], current_pos)
        for key, target_pos in targets_pos.items():
            distance = self.get_distance(target_pos, current_pos)
@@ -277,7 +279,7 @@ class UnrealCvSearch_base(gym.Env):
            import yaml
            setting = yaml.load(f)
        else:
-           print 'unknown type'
+           print('unknown type')
 
        self.cam_id = setting['cam_id']
        self.target_list = setting['targets']
@@ -296,5 +298,3 @@ class UnrealCvSearch_base(gym.Env):
        import gym_unrealcv
        gympath = os.path.dirname(gym_unrealcv.__file__)
        return os.path.join(gympath, 'envs/setting', filename)
-
-

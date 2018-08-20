@@ -15,7 +15,7 @@ class ResetPoint():
         self.height = setting['height']
         self.pitch = setting['pitch']
         if self.reset_type == 'testpoint':
-            print setting['test_xy']
+            print(setting['test_xy'])
             for x,y in setting['test_xy']:
                 pose = [x,y,setting['height'],0]
                 self.new_waypoint(pose, 1000)
@@ -59,7 +59,7 @@ class ResetPoint():
     def select_waypoint_times(self):
 
         self.waypoints = sorted(self.waypoints, key=itemgetter('selected'))
-        self.start_id = random.randint(0, (len(self.waypoints) - 1) / 3)
+        self.start_id = random.randint(0, (len(self.waypoints) - 1)// 3) #edited
         self.waypoints[self.start_id]['selected'] += 1
 
         return self.waypoints[self.start_id]['pose']
@@ -100,13 +100,13 @@ class ResetPoint():
                 dis2others > self.waypoint_th):
                 self.waypoints[waypoint_id]['pose'] = P
                 self.waypoints[waypoint_id]['dis2collision'] = dis2collision
-                print 'update waypoint'
+                print('update waypoint')
 
             # if the point is far from other existing waypoints and collision points, insert it to the waypoints list
 
             if dis2waypoint > self.waypoint_th and dis2collision > self.collision_th:
                 self.new_waypoint(P, dis2collision)
-                print 'add new waypoint'
+                print('add new waypoint')
 
         return len(self.waypoints)
 
@@ -154,6 +154,3 @@ class ResetPoint():
         startpoint = self.waypoints[self.start_id]['pose']
         self.waypoints[self.start_id]['selected'] += 1
         return startpoint
-
-
-

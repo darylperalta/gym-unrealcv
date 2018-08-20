@@ -5,9 +5,13 @@ import math
 import time
 import os
 import re
-import StringIO
+# import StringIO
 import PIL.Image
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 ####TO DO#######
@@ -112,7 +116,7 @@ class UnrealCv:
         while self.arm['flag_grip']==False:
             delt_time = time.time() - start_time
             if delt_time > 0.5:  # time out
-                print 'time out'
+                print('time out')
                 break
         self.arm['flag_grip'] = False
         return self.arm['grip']
@@ -120,7 +124,7 @@ class UnrealCv:
 
     def check_connection(self):
         while (client.isconnected() is False):
-            print 'UnrealCV server is not running. Please try again'
+            print('UnrealCV server is not running. Please try again')
             client.connect()
 
     def show_img(self,img,title="raw_img"):
@@ -277,7 +281,7 @@ class UnrealCv:
     def get_mask_binary(self,object_mask):
         gray = cv2.cvtColor(object_mask,cv2.COLOR_RGB2GRAY)
         ret, mask = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-        print ret
+        print(ret)
         return mask
 
     def get_bbox(self,object_mask,object):

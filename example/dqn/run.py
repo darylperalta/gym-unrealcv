@@ -12,12 +12,15 @@ from gym import wrappers
 if __name__ == '__main__':
 
     env = gym.make(ENV_NAME)
-
+    env = env.unwrapped
+    env.observation_space = env.observation_shape
+    print('observation_space:', env.observation_space.shape)
     env.rendering = SHOW
     # must be discrete action
     assert env.action_type == 'discrete'
 
     ACTION_SIZE = env.action_space.n
+    print('action size:         ', ACTION_SIZE)
     #ACTION_LIST = env.discrete_actions
     INPUT_CHANNELS = env.observation_space.shape[2]
     OBS_HIGH = env.observation_space.high
@@ -74,7 +77,7 @@ if __name__ == '__main__':
     #main loop
     try:
         start_time = time.time()
-        for epoch in xrange(current_epoch, MAX_EPOCHS, 1):
+        for epoch in range(current_epoch, MAX_EPOCHS, 1):
             obs = env.reset()
             #observation = io_util.preprocess_img((obs-OBS_LOW)/OBS_RANGE)
             observation = process_img.process_gray(obs, reset=True)
@@ -84,7 +87,7 @@ if __name__ == '__main__':
             else:
                 EXPLORE = False
                 print ("Evaluate Model")
-            for t in xrange(1000):
+            for t in range(1000):
 
                 start_req = time.time()
 
@@ -131,7 +134,7 @@ if __name__ == '__main__':
                         # SAVE SIMULATION DATA
                     if epoch % SAVE_INTERVAL_EPOCHS == 0 and TRAIN is True:
                         # save model weights and monitoring data
-                        print 'Save model'
+                        print('Save model')
                         Agent.saveModel(MODEL_DIR + '/dqn_ep' + str(epoch) + '.h5')
 
                         #backup monitor file
