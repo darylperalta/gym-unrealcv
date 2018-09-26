@@ -31,7 +31,7 @@ register(
               'test': False,
               'action_type' : 'continuous',
               'observation_type': 'color',
-              'reward_type': 'bbox',
+              'reward_type': 'bbox_distance',
               'docker': use_docker
               },
     max_episode_steps = 1000000
@@ -409,4 +409,33 @@ register(
               'docker': use_docker,
               },
     max_episode_steps = 1000000
+)
+# added by me
+register(
+    id='unreal-Search-v0',
+    entry_point='gym_unrealcv.envs:UnrealCvSearch_base',
+    kwargs = {'setting_file' : 'unreal.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+register(
+    id='unreal-v0',
+    entry_point='gym_unrealcv.envs:UnrealCvSimple',
+    kwargs = {'setting_file' : 'unreal.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
 )
