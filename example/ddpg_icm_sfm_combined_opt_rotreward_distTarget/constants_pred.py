@@ -2,7 +2,7 @@
 ENV_NAME = 'curiosityChangePos-v0'
 
 CONTINUE = True
-RESTART_EP = 450
+RESTART_EP = 70
 
 TRAIN = False
 SHOW = True

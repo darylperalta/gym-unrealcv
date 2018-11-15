@@ -12,6 +12,7 @@ from keras.optimizers import Adam, RMSprop
 from keras.layers.advanced_activations import ELU
 import keras.backend as K
 import tensorflow as tf
+from keras.utils import plot_model
 
 def icm_loss(y_true,y_pred):
     return y_pred
@@ -179,7 +180,7 @@ class icm_class(object):
 
     def get_intrinsic_reward(self,state_t, a_t, state_t_1):
 
-        r_i = self.reward_model.predict([state_t, a_t, state_t_1])
+        [r_i, l_i] = self.reward_model.predict([state_t, a_t, state_t_1])
         #
         # phi_t_1 = self.state_encoder.predict(state_t_1)
         # phi_t_1_hat = self.train_model_forward.predict([state_t, a_t])
@@ -188,7 +189,7 @@ class icm_class(object):
         # diff = phi_t_1-phi_t_1_hat
         # r_i = 0.5*np.sum(np.square(phi_t_1-phi_t_1_hat))
         # return r_i
-        return r_i[0]
+        return r_i[0], l_i
 
     def train(self, state_t, a_t, state_t_1, batch_size):
         # input: obs, action, obs_new
@@ -196,7 +197,7 @@ class icm_class(object):
         # self.train_model_inv.train_on_batch([state_t,state_t_1], a_t)
         # self.train_model_forward.train_on_batch([state_t, a_t],phi_t_1)
         self.train_model.train_on_batch([state_t, a_t, state_t_1],np.zeros((batch_size,)))
-        print('trained')
+        # print('trained')
 
     def create_inverse_model(self):
         # inv model: state_t, state_t_1 -> a_hat
@@ -207,7 +208,7 @@ class icm_class(object):
         x = Dense(256, activation='relu')(x)
         out = Dense(self.action_size, activation = 'linear')(x)
 
-        model = Model([phi_t,phi_t_1],out)
+        model = Model([phi_t,phi_t_1],out,name='inverse_model')
         print('inverse_model: ')
         model.summary()
 
@@ -227,7 +228,7 @@ class icm_class(object):
         x = Dense(256, activation='relu')(x)
         out = Dense(output_dim, activation='linear')(x)
 
-        model = Model([phi_t,a_t],out)
+        model = Model([phi_t,a_t],out,name='forward_model')
         print('forward model: ')
         model.summary()
 
@@ -256,7 +257,7 @@ class icm_class(object):
         x = ELU(alpha=1.0)(x)
 
         phi = Flatten()(x)
-        model = Model(input = s_t, output = phi)
+        model = Model(input = s_t, output = phi,name='state_encoder')
         print('state_encoder: ')
         model.summary()
         return model
@@ -276,12 +277,13 @@ class icm_class(object):
         a_hat = self.inverse_model([phi_t, phi_t_1])
 
         # r_in = 0.5 * K.sum(K.square(phi_t_1 - phi_t_1_hat))
-        r_in = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])))([phi_t_1,phi_t_1_hat])
+        r_in = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])), name = 'reward_in')([phi_t_1,phi_t_1_hat])
         # l_i = 0.5 * -K.sum(a_t * K.log(a_hat + K.epsilon()))
-        l_i = Lambda(lambda x: -K.sum(x[0] * K.log(x[1] + K.epsilon())))([a_t,a_hat])
+        # l_i = Lambda(lambda x: -K.sum(x[0] * K.log(x[1] + K.epsilon())))([a_t,a_hat])
+        l_i = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])),name ='inverse_model_loss')([a_t,a_hat])
 
         # loss0 =  beta * r_in + (1.0 - beta) * l_i
-        loss0 = Lambda(lambda x: beta * x[0] + (1.0 - beta) * x[1])([r_in,l_i])
+        loss0 = Lambda(lambda x: beta * x[0] + (1.0 - beta) * x[1], name = 'l_0')([r_in,l_i])
 
         print('loss: ', type(loss0))
         print('r_in: ', type(r_in))
@@ -292,7 +294,9 @@ class icm_class(object):
         icm_combined.compile(loss=icm_loss,
                               optimizer=optimizer)
         icm_combined.summary()
-        reward_model = Model([s_t,a_t,s_t_1],r_in)
+        plot_model(icm_combined, to_file ="icm_combined.png")
+        reward_model = Model([s_t,a_t,s_t_1],[r_in,l_i])
+
         return icm_combined, reward_model
 
     def create_train_model_forward(self):

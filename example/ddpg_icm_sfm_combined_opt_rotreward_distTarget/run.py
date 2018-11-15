@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-# from constants import *
-from constants_pred import *
+from constants import *
+# from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -101,7 +101,7 @@ if __name__ == '__main__':
                 start_req = time.time()
 
                 if EXPLORE is True: #explore
-
+                    # print('step counter: ', stepCounter)
                     action_pred = Agent.actor.model.predict(observation)
                     # print('action pred', action_pred)
                     action = Agent.Action_Noise(action_pred, explorationRate)
@@ -109,12 +109,15 @@ if __name__ == '__main__':
                     # print(action.shape)
                     #print action
 
+                    # action = np.array([0.75, 0.5, 0.5])# added to test ICM
                     action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
 
                     # print('action env', action_env)
+                    # print(action_env.type)
                     # obs_new, reward, done, info = env.step(action_env)
 
                     pose_new = pose_prev + action_env
+                    # pose_new = pose_prev + np.array([30,0,0]) # to test ICM
                     if pose_new[2] > MAX_distance:
                         pose_new[2] = MAX_distance
                     elif pose_new[2] < MIN_distance:
@@ -137,7 +140,7 @@ if __name__ == '__main__':
                     '''
                     # print('R: ', R)
                     R_distTarget = pose_new[2]/2000
-                    print('reward distance: ', R_distTarget)
+                    # print('reward distance: ', R_distTarget)
                     # print('action_env: ',action_env)
                     # print('action shape: ', action_env.shape)
 
@@ -149,15 +152,17 @@ if __name__ == '__main__':
                     # print("obs shape: ",observation.shape)
                     action_batch = np.zeros((1,)+action_env.shape)
                     action_batch[0] = action
-                    reward_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
-                    print('reward_dist, reward_i: , reward_distTarget', reward, reward_i, R_distTarget)
+                    reward_i, l_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
+                    print('reward_dist, reward_i: , reward_distTarget, l_i', reward, reward_i, R_distTarget, l_i)
                     # print('reward:  ', reward)
                     # reward_total = 0.2*reward_i + 0.8*reward
                     # reward_total = 0.8*reward_i + 0.2*reward
                     # reward_total = 0.6*reward_i + 0.2*reward + 0.2*r_rot
                     # reward_total = 0.5*reward_i + 0.5*r_rot +-
                     # reward_total = 0.5*reward_i + -0.2*R_distTarget+0.5*reward
-                    reward_total = -0.5*R_distTarget+0.5*reward
+                    # reward_total = -0.5*R_distTarget+0.5*reward
+                    # reward_total = 0.8*reward_i + -0.1*R_distTarget + 0.1*reward
+                    reward_total = 1.5*reward_i + -0.5*R_distTarget + 1.0*reward
                     # reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
@@ -168,7 +173,7 @@ if __name__ == '__main__':
                     if stepCounter == LEARN_START_STEP:
                         print("Starting learning")
 
-
+                    # print('agent memory: ', Agent.getMemorySize())
                     if Agent.getMemorySize() >= LEARN_START_STEP:
                         Agent.learnOnMiniBatch(BATCH_SIZE)
                         if explorationRate > FINAL_EPSILON and stepCounter > LEARN_START_STEP:
@@ -223,7 +228,7 @@ if __name__ == '__main__':
                     #newObservation = io_util.preprocess_img(obs_new)
                     action_batch = np.zeros((1,)+action_env.shape)
                     action_batch[0] = action
-                    reward_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
+                    reward_i, l_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
                     print('reward_i: ', reward_i)
                     # print('diff: ', diff)
 
