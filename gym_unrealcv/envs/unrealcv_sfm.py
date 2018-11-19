@@ -7,6 +7,8 @@ import math
 import os
 from gym_unrealcv.envs.utils import env_unreal
 from gym_unrealcv.envs.navigation.interaction import Navigation
+import random
+from math import sin, cos, radians
 # import run_docker # a lib for run env in a docker container
 # import gym_unrealcv.envs.utils.run_docker
 
@@ -25,14 +27,15 @@ class UnrealCvSimple(gym.Env):
     ):
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0
-
+     print('env_bin: ', setting.env_bin)
      # run virtual enrionment in docker container
      # self.docker = run_docker.RunDocker()
      # env_ip, env_dir = self.docker.start(ENV_NAME=ENV_NAME)
 
      # start unreal env
      docker = False
-     self.unreal = env_unreal.RunUnreal(ENV_BIN="house_withfloor/MyProject2/Binaries/Linux/MyProject2")
+     # self.unreal = env_unreal.RunUnreal(ENV_BIN="house_withfloor/MyProject2/Binaries/Linux/MyProject2")
+     self.unreal = env_unreal.RunUnreal(ENV_BIN=setting.env_bin)
      env_ip,env_port = self.unreal.start(docker,resolution)
 
      # connect unrealcv client to server
@@ -84,8 +87,11 @@ class UnrealCvSimple(gym.Env):
 
     # reset the environment
     def _reset(self, ):
+
        x,y,z,_, yaw, _ = self.startpose
        pose = self.startpose
+
+
 
        # self.unrealcv.set_position(self.cam_id, x, y, z)
        # self.unrealcv.set_rotation(self.cam_id, 0, yaw, 0)
@@ -171,14 +177,16 @@ class sfmRelative(gym.Env):
     ):
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0
-
+     # self.reset_type = 'random'
+     self.reset_type = 'test'
      # run virtual enrionment in docker container
      # self.docker = run_docker.RunDocker()
      # env_ip, env_dir = self.docker.start(ENV_NAME=ENV_NAME)
 
      # start unreal env
      docker = False
-     self.unreal = env_unreal.RunUnreal(ENV_BIN="house_withfloor/MyProject2/Binaries/Linux/MyProject2")
+     # self.unreal = env_unreal.RunUnreal(ENV_BIN="house_withfloor/MyProject2/Binaries/Linux/MyProject2")
+     self.unreal = env_unreal.RunUnreal(ENV_BIN=self.env_bin)
      env_ip,env_port = self.unreal.start(docker,resolution)
 
      # connect unrealcv client to server
@@ -206,7 +214,7 @@ class sfmRelative(gym.Env):
      print('start_pose: ', self.startpose)
      #try hardcode start pose
      # self.startpose = [750.0, 295.0, 212.3,356.5,190.273, 0.0]
-     self.startpose = [0.0, 707.1068, 707.1067,0.0,270.0, -45.0]
+     self.startpose = [0.0, 707.1068, 707.1067,0.0,270.0, -45.0] # [0,45,1000]
      # ACTION: (Azimuth, Elevation, Distance)
 
 
@@ -219,7 +227,7 @@ class sfmRelative(gym.Env):
      #         (20,-30),
      # ]
      self.count_steps = 0
-     self.max_steps = 100
+     # self.max_steps = 35
      self.target_pos = ( -60,   0,   50)
      # self.action_space = gym.spaces.Discrete(len(self.ACTION_LIST))
      state = self.unrealcv.read_image(self.cam_id, 'lit')
@@ -233,9 +241,11 @@ class sfmRelative(gym.Env):
         # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
         # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
         azimuth, elevation, distance = action
-        collision = self.unrealcv.move_rel(self.cam_id, azimuth, elevation, distance)
+        collision, move_dist = self.unrealcv.move_rel(self.cam_id, azimuth, elevation, distance)
 
-        reward, done = self.reward(collision)
+        # print('distance:   ', move_dist)
+
+        reward, done = self.reward(collision,move_dist)
         state = self.unrealcv.read_image(self.cam_id, 'lit')
 
         # limit max step per episode
@@ -248,13 +258,36 @@ class sfmRelative(gym.Env):
     # reset the environment
     def _reset(self, ):
        x,y,z,_, yaw, _ = self.startpose
-       pose = self.startpose
+       # pose = self.startpose
 
        # self.unrealcv.set_position(self.cam_id, x, y, z)
        # self.unrealcv.set_rotation(self.cam_id, 0, yaw, 0)
 
-       self.unrealcv.set_pose(self.cam_id,self.startpose)
 
+
+
+       if self.reset_type == 'random':
+           distance = 1000
+           azimuth = 0
+           elevation = 45
+
+           p=90
+           distance = distance + random.randint(-250,250)
+           azimuth = random.randint(0,359)
+           elevation = random.randint(35,55)
+
+           yaw_exp = 270 - azimuth
+           pitch = -1*elevation
+
+           y = distance*sin(radians(p-elevation))*cos(radians(azimuth))
+           x = distance*sin(radians(p-elevation))*sin(radians(azimuth))
+
+           z = distance*cos(radians(p-elevation))
+
+           self.unrealcv.set_pose(self.cam_id,[x,y,z,0,yaw_exp,pitch]) # pose = [x, y, z, roll, yaw, pitch]
+
+       else:
+           self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
        state = self.unrealcv.read_image(self.cam_id, 'lit')
        self.count_steps = 0
        return  state
@@ -264,7 +297,7 @@ class sfmRelative(gym.Env):
        # self.docker.close()
 
     # calcuate reward according to your task
-    def reward(self,collision):
+    def reward(self,collision, move_dist):
        done = False
        reward = - 0.01
 
@@ -274,7 +307,8 @@ class sfmRelative(gym.Env):
             print('Collision Detected!!')
        else:
             #hard code to 1
-            reward = 1
+            reward = -1*move_dist*(1/2000)
+            # print('dist reward: ', reward)
             # distance = self.cauculate_distance(self.target_pos, self.unrealcv.get_pose())
             # if distance < 50:
             #     reward = 10
@@ -309,8 +343,10 @@ class sfmRelative(gym.Env):
 
        self.discrete_actions = setting['discrete_actions']
        self.continous_actions = setting['continous_actions']
+       self.env_bin = setting['env_bin']
        self.env_name = setting['env_name']
-
+       print('env name: ', self.env_name)
+       print('env id: ', setting['env_bin'])
        return setting
 
     def get_settingpath(self, filename):
