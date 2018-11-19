@@ -439,3 +439,93 @@ register(
     max_episode_steps = 1000000
 
 )
+
+register(
+    id='sfmRelativeCont-v0',
+    entry_point='gym_unrealcv.envs:sfmRelative',
+    kwargs = {'setting_file' : 'sfmRelative.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='curiosityChangePos-v0',
+    entry_point='gym_unrealcv.envs:sfmRelative',
+    kwargs = {'setting_file' : 'curiosity_changePos.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='house2-v0',
+    entry_point='gym_unrealcv.envs:sfmRelative',
+    kwargs = {'setting_file' : 'sfmRelative2.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='house-plain-v1',
+    entry_point='gym_unrealcv.envs:sfmRelative',
+    kwargs = {'setting_file' : 'curiosity_changePos_plain.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='circular48-plainfloor-v0',
+    entry_point='gym_unrealcv.envs:sfmRelative',
+    kwargs = {'setting_file' : 'sfmRelative48views.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='HouseTarget-v0',
+    entry_point='gym_unrealcv.envs:sfmHouseTarget',
+    kwargs = {'setting_file' : 'sfmHouseTarget.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)

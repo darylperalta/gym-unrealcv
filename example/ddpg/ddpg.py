@@ -47,12 +47,12 @@ class DDPG:
             self.sess = tf.Session(config=config)
             K.set_session(self.sess)
 
-        print 'tf config!'
+        print('tf config!')
 
         self.actor = ActorNetwork(self.sess, self.img_shape, self.action_size,  self.target_update_rate, self.learningRateActor)
-        print 'actor'
+        print('actor')
         self.critic = CriticNetwork(self.sess, self.img_shape, self.action_size,  self.target_update_rate, self.learningRateCritic)
-        print 'critic'
+        print('critic')
 
 
     def updateTargetNetwork(self,model,target,updaterate):
@@ -146,7 +146,3 @@ class DDPG:
 
     def random_noise(self):
         return np.random.normal(0,0.5)
-
-
-
-

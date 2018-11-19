@@ -1,7 +1,7 @@
 ENV_NAME = 'Search-RrDoorContinuous-v0'
 
 CONTINUE = False
-RESTART_EP = 6000
+RESTART_EP = 2000
 TRAIN = True
 SHOW = True
 MAP = False

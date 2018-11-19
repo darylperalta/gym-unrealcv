@@ -239,7 +239,7 @@ class DDPG_icm:
         return self.memory.getCurrentSize()
 
 
-    def learnOnMiniBatch(self, miniBatchSize):
+    def learnOnMiniBatch(self, miniBatchSize, icm_only = False):
         state_batch, action_batch, reward_batch, newState_batch, isFinal_batch \
             = self.memory.getMiniBatch(miniBatchSize)
 
@@ -253,25 +253,28 @@ class DDPG_icm:
         Y_value = np.zeros([miniBatchSize, self.action_size])
         for k in range(miniBatchSize):
             Y_value[k] = reward_batch[k] + (1 - isFinal_batch[k]) * self.discountFactor * qValuesNewState_batch[k]
-
-
         action_batch = np.array(action_batch)
         #print action_batch
         #print Y_value.shape
         state_batch = np.array(state_batch)
-        X_input = [state_batch, action_batch]
-        self.critic.model.train_on_batch(X_input, Y_value)
+        if icm_only == False:
 
-        a_for_grad = self.actor.model.predict(state_batch)
-        grads = self.critic.gradients(state_batch, a_for_grad)
+            X_input = [state_batch, action_batch]
+            self.critic.model.train_on_batch(X_input, Y_value)
 
-        self.actor.train(state_batch, grads)
+            a_for_grad = self.actor.model.predict(state_batch)
+            grads = self.critic.gradients(state_batch, a_for_grad)
 
-        self.icm.train(state_batch, action_batch, np.array(newState_batch), miniBatchSize)
+            self.actor.train(state_batch, grads)
+
+            self.icm.train(state_batch, action_batch, np.array(newState_batch), miniBatchSize)
+            self.actor.target_train()
+            self.critic.target_train()
+
+        else:
+            self.icm.train(state_batch, action_batch, np.array(newState_batch), miniBatchSize)
 
 
-        self.actor.target_train()
-        self.critic.target_train()
         #self.updateTargetNetwork(self.critic.model, self.critic.target_model, self.target_update_rate)
         #self.updateTargetNetwork(self.actor.model, self.actor.target_model, self.target_update_rate)
 

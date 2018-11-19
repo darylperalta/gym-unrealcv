@@ -1,13 +1,15 @@
 ENV_NAME = 'curiosityChangePos-v0'
 
 CONTINUE = False
-RESTART_EP = 10
+RESTART_EP = 80
 TRAIN = True
 SHOW = True
 MAP = False
 
-MIN_elevation = 25
-MAX_elevation = 65
+# MIN_elevation = 25
+# MAX_elevation = 65
+MIN_elevation = 20
+MAX_elevation = 90
 MIN_distance = 600
 MAX_distance = 2000
 
@@ -18,6 +20,7 @@ MEMORY_SIZE = 50000
 # LEARN_START_STEP = 10000
 # LEARN_START_STEP = 500
 LEARN_START_STEP = 1728
+LEARN_START_STEP_ICM = 72
 MAX_EXPLORE_STEPS = 50000
 
 INPUT_SIZE = 84 # pre 100
@@ -37,7 +40,7 @@ FINAL_EPSILON = 0.1  # final value of epsilon
 
 TEST_INTERVAL_EPOCHS = 1000
 # SAVE_INTERVAL_EPOCHS = 500
-SAVE_INTERVAL_EPOCHS = 10
+SAVE_INTERVAL_EPOCHS = 50
 
 LOG_NAME_SAVE = 'log'
 MONITOR_DIR = LOG_NAME_SAVE + '/monitor/' #the path to save monitor file

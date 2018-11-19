@@ -3,7 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-from constants import *
+# from constants import *
+from constants_pred import *
 from ddpg import DDPG
 from gym import wrappers
 import time
@@ -13,11 +14,17 @@ from example.utils import preprocessing, io_util
 if __name__ == '__main__':
 
     env = gym.make(ENV_NAME)
+    env = env.unwrapped
+    env.observation_space = env.observation_shape
+    print('observation_space:', env.observation_space.shape)
     env.rendering = SHOW
     assert env.action_type == 'continuous'
     ACTION_SIZE = env.action_space.shape[0]
+    print('action size: ', ACTION_SIZE)
     ACTION_HIGH = env.action_space.high
+    print('Action HIGH: ', ACTION_HIGH)
     ACTION_LOW = env.action_space.low
+    print('Action LOW: ', ACTION_LOW)
     INPUT_CHANNELS = env.observation_space.shape[2]
     OBS_HIGH = env.observation_space.high
     OBS_LOW = env.observation_space.low
@@ -60,27 +67,37 @@ if __name__ == '__main__':
 
     try:
         start_time = time.time()
-        for epoch in xrange(current_epoch + 1, MAX_EPOCHS + 1, 1):
+        metric_reward = 0
+        num_success = 0
+
+        for epoch in range(current_epoch + 1, MAX_EPOCHS + 1, 1):
             obs = env.reset()
             #observation = io_util.preprocess_img(obs)
             observation = process_img.process_gray(obs,reset=True)
             cumulated_reward = 0
             #if ((epoch) % TEST_INTERVAL_EPOCHS != 0 or stepCounter < LEARN_START_STEP) and TRAIN is True :  # explore
-            EXPLORE = True
+            if TRAIN is True:
+                EXPLORE = True
+            else:
+                EXPLORE = False
+
             #else:
             #    EXPLORE = False
             #    print ("Evaluate Model")
-            for t in xrange(MAX_STEPS_PER_EPOCH):
+            for t in range(MAX_STEPS_PER_EPOCH):
 
                 start_req = time.time()
 
                 if EXPLORE is True: #explore
 
                     action_pred = Agent.actor.model.predict(observation)
+                    # print('action pred', action_pred)
                     action = Agent.Action_Noise(action_pred, explorationRate)
+                    # print('action',action)
                     #print action
 
                     action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
+                    # print('action env', action_env)
                     obs_new, reward, done, info = env.step(action_env)
 
                     newObservation = process_img.process_gray(obs_new)
@@ -102,8 +119,23 @@ if __name__ == '__main__':
                         #    print 'Reset Exploration Rate'
                 #test
                 else:
-                    action = Agent.actor.model.predict(observation)
-                    obs_new, reward, done, info = env.step(action)
+                    # action_batch = Agent.actor.model.predict(observation)
+                    # action_batch_norm = action_batch
+                    # for i in range(len(action_batch[0])):
+                    #     # noise = np.random.normal(0.5,0.5)
+                    #     # action_batch[0][i] = (1 - explorationRate) * action_pred[0][i] + explorationRate * noise
+                    #     action_batch_norm[0][i] = max(0,action_batch_norm[0][i])
+                    #     action_batch_norm[0][i] = min(1,action_batch_norm[0][i])
+                    # action = action_batch_norm[0]
+
+                    action_pred = Agent.actor.model.predict(observation)
+                    action = Agent.Action_Noise(action_pred, 0)
+
+
+
+                    action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
+                    print('action: ', action_env)
+                    obs_new, reward, done, info = env.step(action_env)
                     newObservation = process_img.process_gray(obs_new)
                     #newObservation = io_util.preprocess_img(obs_new)
                     observation = newObservation
@@ -117,13 +149,19 @@ if __name__ == '__main__':
                 if done:
                     m, s = divmod(int(time.time() - start_time + loadsim_seconds), 60)
                     h, m = divmod(m, 60)
+                    metric_reward += cumulated_reward
+                    if reward>= 0:
+                        num_success += 1
+                        print('success')
+                    print('num success: ', num_success)
 
                     print ("EP " + str(epoch) +" Csteps= " + str(stepCounter) + " - {} steps".format(t + 1) + " - CReward: " + str(
                         round(cumulated_reward, 2)) + "  Eps=" + str(round(explorationRate, 2)) + "  Time: %d:%02d:%02d" % (h, m, s) )
                         # SAVE SIMULATION DATA
+                    print('Metric reward: ', metric_reward)
                     if (epoch) % SAVE_INTERVAL_EPOCHS == 0 and TRAIN is True:
                         # save model weights and monitoring data
-                        print 'Save model'
+                        print('Save model')
                         Agent.saveModel( MODEL_DIR + '/ep' +str(epoch))
 
                         copy_tree(MONITOR_DIR + 'tmp', MONITOR_DIR + str(epoch))

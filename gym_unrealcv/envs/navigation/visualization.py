@@ -12,15 +12,15 @@ def show_info(info ):
     action_y = int(9*height/10)
     cv2.putText(cv_img, 'Action', (action_x, action_y), font, 0.5, (255, 255, 255), 2)
     color = [(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255)]
-    if info['Action'] == 0:
+    if info['Action'].all() == 0:
         color[0] = (0, 0, 255)
-    elif info['Action'] == 1:
+    elif info['Action'].all() == 1:
         color[1] = (0, 0, 255)
-    elif info['Action'] == 2:
+    elif info['Action'].all() == 2:
         color[2] = (0, 0, 255)
-    elif info['Action'] == 3:
+    elif info['Action'].all() == 3:
         color[3] = (0, 0, 255)
-    elif info['Action'] == 4:
+    elif info['Action'].all() == 4:
         color[4] = (0, 0, 255)
 
     cv2.circle(cv_img, (action_x + int(width*0.04),    action_y - int(height*0.15)), 8, color[0], -1) #forward
@@ -58,4 +58,3 @@ def show_info(info ):
 
     cv2.imshow('info_show', cv_img)
     cv2.waitKey(10)
-

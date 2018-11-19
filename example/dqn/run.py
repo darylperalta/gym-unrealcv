@@ -6,11 +6,12 @@ import gym_unrealcv
 import dqn
 import gym
 from constants import *
+# from constants_pred import *
 from example.utils import preprocessing, io_util
 from gym import wrappers
 
 if __name__ == '__main__':
-
+    # print('params: ', params_json)
     env = gym.make(ENV_NAME)
     env = env.unwrapped
     env.observation_space = env.observation_shape
@@ -52,6 +53,13 @@ if __name__ == '__main__':
     else:
         #Load weights, monitor info and parameter info.
         with open(params_json) as outfile:
+            # print("ENTEREDDDD")
+            # print("ENTEREDDDD")
+            # print("ENTEREDDDD")
+            # print("ENTEREDDDD")
+            # print("ENTEREDDDD")
+            print("ENTEREDDDD")
+            print('params_json: ', params_json)
             d = json.load(outfile)
             explorationRate = d.get('explorationRate')
             current_epoch = d.get('current_epoch')
@@ -67,6 +75,8 @@ if __name__ == '__main__':
                 INPUT_CHANNELS,
                 USE_TARGET_NETWORK
             )
+            print('weights path: ', weights_path)
+
             Agent.loadWeights(weights_path)
             io_util.clear_monitor_files(MONITOR_DIR + 'tmp')
             copy_tree(monitor_path, MONITOR_DIR + 'tmp')
@@ -80,7 +90,7 @@ if __name__ == '__main__':
         for epoch in range(current_epoch, MAX_EPOCHS, 1):
             obs = env.reset()
             #observation = io_util.preprocess_img((obs-OBS_LOW)/OBS_RANGE)
-            observation = process_img.process_gray(obs, reset=True)
+            observation = process_img.process_gray(obs, reset=True) # converts to gray
             cumulated_reward = 0
             if (epoch % TEST_INTERVAL_EPOCHS != 0 or stepCounter < LEARN_START_STEP) and TRAIN is True :  # explore
                 EXPLORE = True

@@ -95,8 +95,8 @@ if __name__ == '__main__':
                     action_pred = Agent.actor.model.predict(observation)
                     # print('action pred', action_pred)
                     action = Agent.Action_Noise(action_pred, explorationRate)
-                    print('action',action)
-                    print(action.shape)
+                    # print('action',action)
+                    # print(action.shape)
                     #print action
 
                     action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
@@ -114,8 +114,8 @@ if __name__ == '__main__':
                     action_batch = np.zeros((1,)+action_env.shape)
                     action_batch[0] = action
                     reward_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
-                    print('reward_i: ', reward_i)
-                    print('reward:  ', reward)
+                    # print('reward_i: ', reward_i)
+                    # print('reward:  ', reward)
                     reward_total = reward_i + reward
 
                     # Agent.addMemory(observation, action, reward, newObservation, done)

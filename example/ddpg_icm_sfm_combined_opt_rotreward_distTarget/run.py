@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-from constants import *
-# from constants_pred import *
+# from constants import *
+from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -162,7 +162,7 @@ if __name__ == '__main__':
                     # reward_total = 0.5*reward_i + -0.2*R_distTarget+0.5*reward
                     # reward_total = -0.5*R_distTarget+0.5*reward
                     # reward_total = 0.8*reward_i + -0.1*R_distTarget + 0.1*reward
-                    reward_total = 1.5*reward_i + -0.5*R_distTarget + 1.0*reward
+                    reward_total = 1.5*reward_i + -0.3*R_distTarget + 0.3*reward
                     # reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
@@ -172,12 +172,15 @@ if __name__ == '__main__':
 
                     if stepCounter == LEARN_START_STEP:
                         print("Starting learning")
-
+                    if stepCounter == LEARN_START_STEP_ICM:
+                        print("Starting learning ICM")
                     # print('agent memory: ', Agent.getMemorySize())
                     if Agent.getMemorySize() >= LEARN_START_STEP:
                         Agent.learnOnMiniBatch(BATCH_SIZE)
                         if explorationRate > FINAL_EPSILON and stepCounter > LEARN_START_STEP:
                             explorationRate -= (INITIAL_EPSILON - FINAL_EPSILON) / MAX_EXPLORE_STEPS
+                    elif Agent.getMemorySize() >= LEARN_START_STEP_ICM:
+                        Agent.learnOnMiniBatch(BATCH_SIZE,icm_only=True)
                         #elif stepCounter % (MAX_EXPLORE_STEPS * 1.5) == 0:
                         #    explorationRate = 0.99
                         #    print 'Reset Exploration Rate'

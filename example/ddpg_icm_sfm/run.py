@@ -79,8 +79,10 @@ if __name__ == '__main__':
         num_success = 0
         for epoch in range(current_epoch + 1, MAX_EPOCHS + 1, 1):
             obs = env.reset()
+            obs_new = obs
             #observation = io_util.preprocess_img(obs)
             observation = process_img.process_gray(obs,reset=True)
+            print('shape of obs:       ', observation.shape)
             cumulated_reward = 0
             #if ((epoch) % TEST_INTERVAL_EPOCHS != 0 or stepCounter < LEARN_START_STEP) and TRAIN is True :  # explore
             if TRAIN is True:
@@ -91,6 +93,7 @@ if __name__ == '__main__':
             #else:
             #    EXPLORE = False
             #    print ("Evaluate Model")
+            pose_prev = [0,45,1000]
             for t in range(MAX_STEPS_PER_EPOCH):
 
                 start_req = time.time()
@@ -106,7 +109,18 @@ if __name__ == '__main__':
 
                     action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
                     # print('action env', action_env)
-                    obs_new, reward, done, info = env.step(action_env)
+                    # obs_new, reward, done, info = env.step(action_env)
+
+                    pose_new = pose_prev + action_env
+                    if pose_new[2] > 2000:
+                        pose_new[2] = 2000
+                    if (pose_new[1] > 65):
+                        pose_new[1] = 65
+                    elif (pose_new[1]<25):
+                        pose_new[1] = 25
+
+                    print('pose_new: ', pose_new)
+                    obs_new, reward, done, info = env.step(pose_new)
                     # print('action_env: ',action_env)
                     # print('action shape: ', action_env.shape)
 
@@ -127,6 +141,9 @@ if __name__ == '__main__':
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
                     observation = newObservation
+
+                    pose_prev = pose_new
+
                     if stepCounter == LEARN_START_STEP:
                         print("Starting learning")
 
@@ -151,19 +168,37 @@ if __name__ == '__main__':
                     filename = '/ob%d'%t
                     filename = LOG_NAME_SAVE+filename + '.png'
 
-                    cv2.imwrite(filename,obs)
+                    cv2.imwrite(filename,obs_new)
                     action_pred = Agent.actor.model.predict(observation)
                     action = Agent.Action_Noise(action_pred, 0)
 
 
 
                     action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
-                    print('action: ', action_env)
-                    obs_new, reward, done, info = env.step(action_env)
+                    print('action env: ', action_env)
+
+                    pose_new = pose_prev + action_env
+                    if pose_new[2] > 2000:
+                        pose_new[2] = 2000
+                    if (pose_new[1] > 65):
+                        pose_new[1] = 65
+                    elif (pose_new[1]<25):
+                        pose_new[1] = 25
+
+                    # obs_new, reward, done, info = env.step(action_env_prev+action_env)
+                    obs_new, reward, done, info = env.step(pose_new)
                     newObservation = process_img.process_gray(obs_new)
                     #newObservation = io_util.preprocess_img(obs_new)
+                    action_batch = np.zeros((1,)+action_env.shape)
+                    action_batch[0] = action
+                    reward_i, diff = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
+                    print('reward_i: ', reward_i)
+                    print('diff: ', diff)
+                    
                     observation = newObservation
                     reward_total = reward
+
+                    pose_prev = pose_new
 
                 #print 'step time:' + str(time.time() - start_req)
                 if MAP:

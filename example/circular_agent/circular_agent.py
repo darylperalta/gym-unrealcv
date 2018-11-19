@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument("-e","--env_id", nargs='?', default='Search-RrMultiPlantsDiscreteTest-v0', help='Select the environment to run')
     args = parser.parse_args()
+    print('envid: ', args.env_id)
     env = gym.make(args.env_id)
 
     env.rendering = True
@@ -46,11 +47,11 @@ if __name__ == '__main__':
         cv2.imwrite(filename,ob)
 
         action[0] = action[0]+10
-        print(action)
-        print(type(action))
+        # print(action)
+        # print(type(action))
         # ob, reward, done, _ = env.step(action)
         ob, reward, done, _ = env.step(action)
-        print('ob shape: ', ob.shape)
+        # print('ob shape: ', ob.shape)
         print('reward: ', reward)
         print('done:', done)
 

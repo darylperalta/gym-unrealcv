@@ -1,6 +1,6 @@
 {
 	"env_name": "unreal",
-	"env_bin": "house/MyProject2/Binaries/Linux/MyProject2",
+	"env_bin": "house_withfloor/MyProject2/Binaries/Linux/MyProject2",
 	"cam_id": 0,
 	"height": 40,
 	"pitch": 0,

@@ -2,14 +2,16 @@
 ENV_NAME = 'curiosityChangePos-v0'
 
 CONTINUE = True
-RESTART_EP = 70
+RESTART_EP = 100
 
 TRAIN = False
 SHOW = True
 MAP = False
 
-MIN_elevation = 25
-MAX_elevation = 65
+# MIN_elevation = 25
+# MAX_elevation = 65
+MIN_elevation = 20
+MAX_elevation = 90
 MIN_distance = 600
 MAX_distance = 2000
 
