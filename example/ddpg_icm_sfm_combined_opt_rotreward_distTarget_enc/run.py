@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-# from constants import *
-from constants_pred import *
+from constants import *
+# from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -13,6 +13,7 @@ from example.utils.odm import run_opensfm
 import numpy as np
 import cv2
 from essentialMat import getMatrices, eulerAnglesToRotationMatrix
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     print('Environment: ', ENV_NAME)
@@ -79,6 +80,12 @@ if __name__ == '__main__':
         start_time = time.time()
         metric_reward = 0
         num_success = 0
+        reward_tot_hist= []
+        reward_i_hist = []
+        reward_dist_hist = []
+        reward_distTarget_hist = []
+        epoch_hist = []
+
         for epoch in range(current_epoch + 1, MAX_EPOCHS + 1, 1):
             obs = env.reset()
             obs_new = obs
@@ -86,6 +93,9 @@ if __name__ == '__main__':
             observation = process_img.process_gray(obs,reset=True)
             # `print('shape of obs:       ', observation.shape)
             cumulated_reward = 0
+            cumulated_reward_i = 0
+            cumulated_reward_dist = 0
+            cumulated_reward_distTarget = 0
             #if ((epoch) % TEST_INTERVAL_EPOCHS != 0 or stepCounter < LEARN_START_STEP) and TRAIN is True :  # explore
             if TRAIN is True:
                 EXPLORE = True
@@ -141,9 +151,7 @@ if __name__ == '__main__':
                     '''
                     # print('R: ', R)
                     R_distTarget = pose_new[2]/2000
-                    # print('reward distance: ', R_distTarget)
-                    # print('action_env: ',action_env)
-                    # print('action shape: ', action_env.shape)
+
 
                     newObservation = process_img.process_gray(obs_new)
                     #newObservation = io_util.preprocess_img(obs_new)
@@ -155,16 +163,8 @@ if __name__ == '__main__':
                     action_batch[0] = action
                     reward_i, l_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
                     print('reward_dist, reward_i: , reward_distTarget, l_i', reward, reward_i, R_distTarget, l_i)
-                    # print('reward:  ', reward)
-                    # reward_total = 0.2*reward_i + 0.8*reward
-                    # reward_total = 0.8*reward_i + 0.2*reward
-                    # reward_total = 0.6*reward_i + 0.2*reward + 0.2*r_rot
-                    # reward_total = 0.5*reward_i + 0.5*r_rot +-
-                    # reward_total = 0.5*reward_i + -0.2*R_distTarget+0.5*reward
-                    # reward_total = -0.5*R_distTarget+0.5*reward
-                    # reward_total = 0.8*reward_i + -0.1*R_distTarget + 0.1*reward
-                    #reward_total = 1.5*reward_i + -0.3*R_distTarget + 0.3*reward
-                    reward_total = 1.0*reward_i + -0.3*R_distTarget + 0.6*reward
+
+                    reward_total = 1.5*reward_i + -0.3*R_distTarget + 2.0*reward
                     # reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
@@ -210,7 +210,7 @@ if __name__ == '__main__':
                     print('action env: ', action_env)
                     print('action high: ', ACTION_HIGH)
                     print('action low: ', ACTION_LOW)
-
+                    print('shape , ', action_env.shape)
                     pose_new = pose_prev + action_env
                     # if pose_new[2] > 2000:
                     #     pose_new[2] = 2000
@@ -241,6 +241,7 @@ if __name__ == '__main__':
                     observation = newObservation
                     # reward_total = reward
                     reward_total = reward_i
+
                     pose_prev = pose_new
 
                 #print 'step time:' + str(time.time() - start_req)
@@ -250,14 +251,20 @@ if __name__ == '__main__':
 
                 # cumulated_reward += reward
                 cumulated_reward += reward_total
+                cumulated_reward_i += reward_i
+                cumulated_reward_dist += reward
+                cumulated_reward_distTarget += -R_distTarget
+
+
+
                 if done:
                     m, s = divmod(int(time.time() - start_time + loadsim_seconds), 60)
                     h, m = divmod(m, 60)
                     metric_reward += cumulated_reward
                     if reward>= 0:
                         num_success += 1
-                        print('success')
-                    print('num success: ', num_success)
+                        # print('success')
+                    # print('num success: ', num_success)
                     print ("EP " + str(epoch) +" Csteps= " + str(stepCounter) + " - {} steps".format(t + 1) + " - CReward: " + str(
                         round(cumulated_reward, 2)) + "  Eps=" + str(round(explorationRate, 2)) + "  Time: %d:%02d:%02d" % (h, m, s) )
                         # SAVE SIMULATION DATA
@@ -275,7 +282,33 @@ if __name__ == '__main__':
                         with open(PARAM_DIR + '/' + str(epoch) + '.json','w') as outfile:
                             json.dump(parameter_dictionary, outfile)
 
+                    if TRAIN is True:
+                        reward_tot_hist.append(cumulated_reward)
+                        reward_i_hist.append(cumulated_reward_i)
+                        reward_dist_hist.append(cumulated_reward_dist)
+                        reward_distTarget_hist.append(cumulated_reward_distTarget)
+                        epoch_hist.append(epoch)
+
+                        plt.plot(epoch_hist,reward_tot_hist)
+                        plt.savefig('totalreward.png')
+                        plt.clf()
+
+                        plt.plot(epoch_hist,reward_i_hist)
+                        plt.savefig('reward_i.png')
+                        plt.clf()
+
+                        plt.plot(epoch_hist,reward_dist_hist)
+                        plt.savefig('reward_dist.png')
+                        plt.clf()
+
+                        plt.plot(epoch_hist,reward_distTarget_hist)
+                        plt.savefig('reward_distTarget.png')
+                        plt.clf()
+
+
+
                     break
+
 
         if EXPLORE is False:
             print('Reconstructing images...')
