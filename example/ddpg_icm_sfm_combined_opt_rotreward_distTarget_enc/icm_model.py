@@ -209,10 +209,12 @@ class icm_class(object):
         a_hat = self.inverse_model([phi_t, phi_t_1])
 
         # r_in = 0.5 * K.sum(K.square(phi_t_1 - phi_t_1_hat))
-        r_in = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])), name = 'reward_in')([phi_t_1,phi_t_1_hat])
+        # r_in = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])), name = 'reward_in')([phi_t_1,phi_t_1_hat])
+        r_in = Lambda(lambda x: 0.5 * K.mean(K.square(x[0] - x[1])), name = 'reward_in')([phi_t_1,phi_t_1_hat])
         # l_i = 0.5 * -K.sum(a_t * K.log(a_hat + K.epsilon()))
         # l_i = Lambda(lambda x: -K.sum(x[0] * K.log(x[1] + K.epsilon())))([a_t,a_hat])
-        l_i = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])),name ='inverse_model_loss')([a_t,a_hat])
+        # l_i = Lambda(lambda x: 0.5 * K.sum(K.square(x[0] - x[1])),name ='inverse_model_loss')([a_t,a_hat])
+        l_i = Lambda(lambda x: 0.5 * K.mean(K.square(x[0] - x[1])),name ='inverse_model_loss')([a_t,a_hat])
 
         # loss0 =  beta * r_in + (1.0 - beta) * l_i
         loss0 = Lambda(lambda x: beta * x[0] + (1.0 - beta) * x[1], name = 'l_0')([r_in,l_i])
