@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-from constants import *
-# from constants_pred import *
+# from constants import *
+from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -162,9 +162,13 @@ if __name__ == '__main__':
                     action_batch = np.zeros((1,)+action_env.shape)
                     action_batch[0] = action
                     reward_i, l_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
-                    print('reward_dist, reward_i: , reward_distTarget, l_i', reward, reward_i, R_distTarget, l_i)
 
-                    reward_total = 1.5*reward_i + -0.3*R_distTarget + 2.0*reward
+
+                    # reward_total = 1.5*reward_i + -0.3*R_distTarget + 2.0*reward
+                    reward_i = 0.01 * reward_i
+                    reward = 0.1 * reward
+                    print('reward_dist, reward_i: , reward_distTarget, l_i', reward, reward_i, R_distTarget, l_i)
+                    reward_total = reward_i + reward
                     # reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
@@ -212,6 +216,7 @@ if __name__ == '__main__':
                     print('action low: ', ACTION_LOW)
                     print('shape , ', action_env.shape)
                     pose_new = pose_prev + action_env
+                    R_distTarget = pose_new[2]/2000
                     # if pose_new[2] > 2000:
                     #     pose_new[2] = 2000
                     # if (pose_new[1] > 65):
