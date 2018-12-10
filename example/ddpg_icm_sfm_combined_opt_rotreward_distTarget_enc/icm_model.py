@@ -118,6 +118,9 @@ class icm_class(object):
 
         x = Concatenate()([phi_t, phi_t_1])
         x = Dense(256, activation='relu')(x)
+        # x = Dense(128, activation='relu')(x)        #added after seeing view prediction bad
+        x = Dense(256, activation='relu')(x)
+        x = Dense(256, activation='relu')(x)
         out = Dense(self.action_size, activation = 'linear')(x)
 
         model = Model([phi_t,phi_t_1],out,name='inverse_model')
@@ -137,6 +140,9 @@ class icm_class(object):
         a_t = Input(shape = action_shape)
 
         x = Concatenate()([phi_t, a_t])
+        x = Dense(256, activation='relu')(x)
+        # x = Dense(128, activation='relu')(x)        #added after seeing view prediction bad
+        x = Dense(256, activation='relu')(x)
         x = Dense(256, activation='relu')(x)
         out = Dense(output_dim, activation='linear')(x)
 
@@ -188,7 +194,8 @@ class icm_class(object):
 
 
 
-    def create_train_combined(self,lmd=1.0, beta=0.01):
+    # def create_train_combined(self,lmd=1.0, beta=0.01):
+    def create_train_combined(self,lmd=1.0, beta=0.8):
 
         s_t = Input(shape = self.state_shape)
         a_t = Input(shape = self.action_shape)
