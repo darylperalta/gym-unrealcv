@@ -6,7 +6,7 @@ from keras.models import model_from_json, load_model
 #from keras.engine.training import collect_trainable_weights
 from keras.models import Sequential
 from keras.layers import Dense, Flatten, Input, merge, Activation,Convolution2D, MaxPooling2D, Lambda
-from keras.layers import Conv2D, Concatenate
+from keras.layers import Conv2D, Concatenate, BatchNormalization, LeakyReLU
 from keras.models import Sequential, Model
 from keras.optimizers import Adam, RMSprop
 from keras.layers.advanced_activations import ELU
@@ -69,9 +69,23 @@ def inverse_model(enc_shape, action_size = (6,)):
     model = Model([phi_t, phi_t_1], out)
     return model
 
+def sampling(args):
+    """Reparameterization trick by sampling fr an isotropic unit Gaussian.
+    # Arguments:
+        args (tensor): mean and log of variance of Q(z|X)
+    # Returns:
+        z (tensor): sampled latent vector
+    """
+
+    z_mean, z_log_var = args
+    batch = K.shape(z_mean)[0]
+    dim = K.int_shape(z_mean)[1]
+    # by default, random_normal has mean=0 and std=1.0
+    epsilon = K.random_normal(shape=(batch, dim))
+    return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
 class icm_class(object):
-    def __init__(self, sess, state_shape, action_size, enc_shape, LEARNING_RATE, pretrained=True, enc_path = '/hdd/AIRSCAN/icm_models/encoder_checkpointsmodel-50_cont.hdf5'):
+    def __init__(self, sess, state_shape, action_size, enc_shape, LEARNING_RATE, pretrained=False, enc_path = '/hdd/AIRSCAN/icm_models/encoder_checkpointsmodel-50_cont.hdf5', vae =True):
         self.sess = sess
         # self.TAU = TAU
         self.LEARNING_RATE = LEARNING_RATE
@@ -81,6 +95,7 @@ class icm_class(object):
         self.state_shape = state_shape
         self.pretrained = pretrained
         self.enc_path = enc_path
+        self.vae = vae
         # K.set_session(sess)
 
         self.state_encoder = self.create_state_encoder(state_shape,enc_shape)
@@ -163,31 +178,74 @@ class icm_class(object):
         x = Convolution2D(32, 3, 3, activation='elu')(x)
         x = Flatten()(x)
         '''
-        # x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(s_t)
-        # x = ELU(alpha=1.0)(x)
-        # x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-        # x = ELU(alpha=1.0)(x)
-        # x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-        # x = ELU(alpha=1.0)(x)
-        # x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-        # x = ELU(alpha=1.0)(x)
-        # x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-        # x = ELU(alpha=1.0)(x)
 
-        x = Conv2D(32, (3,3), padding='same', strides=(2, 2))(s_t)
-        x = ELU(alpha=1.0)(x)
-        x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-        x = ELU(alpha=1.0)(x)
-        x = Conv2D(64, (3, 3), padding='same', strides=(2, 2))(x)
-        x = ELU(alpha=1.0)(x)
-        x = Conv2D(64, (3, 3), padding='same', strides=(3, 2))(x)
-        x = ELU(alpha=1.0)(x)
-        x = Conv2D(128, (3, 3), padding='same', strides=(2, 2))(x)
-        x = ELU(alpha=1.0)(x)
+        if self.vae == True:
+            x = Conv2D(64,(5,5), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
+            x = BatchNormalization(name= 'enc_bn1')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU1')(x)
 
-        x = Flatten()(x)
-        phi = Dense(enc_shape[0], name='phi')(x)
-        model = Model(input = s_t, output = phi,name='state_encoder')
+
+            x = Conv2D(128,(5,5), strides =(2,2),padding='same', name= 'enc_conv2')(x)
+            x = BatchNormalization(name= 'enc_bn2')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU2')(x)
+
+
+            x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv3')(x)
+            x = BatchNormalization(name= 'enc_bn3')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU3')(x)
+
+            x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv4')(x)
+            x = BatchNormalization(name= 'enc_bn4')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU4')(x)
+
+            x = Flatten()(x)
+            #x = Dense(2048, name = 'enc_dense1')(x)
+            #x = BatchNormalization(name = 'enc_bn4')(x)
+            #x = Activation('relu', name='z_mean')(x)
+            #x = LeakyReLU(alpha = 0.2, name = 'enc_dense2')(x)
+
+
+
+            x_mean = Dense(enc_shape[0], name='x_mean')(x)
+            x_mean = BatchNormalization()(x_mean)
+            z_mean = LeakyReLU(alpha = 0.2, name = 'z_mean')(x_mean)
+
+
+            x_log_var = Dense(enc_shape[0], name='x_log_var')(x)
+            x_log_var = BatchNormalization()(x_log_var)
+            z_log_var = LeakyReLU(alpha = 0.2, name='z_log_var')(x_log_var)
+
+            # use reparameterization trick to push the sampling out as input
+            # note that "output_shape" isn't necessary with the TensorFlow backend
+            z = Lambda(sampling, output_shape=(enc_shape[0],), name='z')([z_mean, z_log_var])
+            #encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
+            model = Model(input = s_t, output = [z_mean, z_log_var, z],name='state_encoder')
+
+
+
+        else:
+
+            x = Conv2D(32, (3,3), padding='same', strides=(2, 2))(s_t)
+            x = ELU(alpha=1.0)(x)
+            x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
+            x = ELU(alpha=1.0)(x)
+            x = Conv2D(64, (3, 3), padding='same', strides=(2, 2))(x)
+            x = ELU(alpha=1.0)(x)
+            x = Conv2D(64, (3, 3), padding='same', strides=(3, 2))(x)
+            x = ELU(alpha=1.0)(x)
+            x = Conv2D(128, (3, 3), padding='same', strides=(2, 2))(x)
+            x = ELU(alpha=1.0)(x)
+
+            x = Flatten()(x)
+            phi = Dense(enc_shape[0], name='phi')(x)
+
+            model = Model(input = s_t, output = phi,name='state_encoder')
+
+        plot_model(model, to_file='encoder.png', show_shapes=True)
         print('state_encoder: ')
         model.summary()
         return model
@@ -201,8 +259,13 @@ class icm_class(object):
         a_t = Input(shape = self.action_shape)
         s_t_1 = Input(shape = self.state_shape)
 
-        phi_t = self.state_encoder(s_t)
-        phi_t_1 = self.state_encoder(s_t_1)
+        if self.vae == True:
+            phi_t = self.state_encoder(s_t)[2]
+            phi_t_1 = self.state_encoder(s_t_1)[2]
+
+        else:
+            phi_t = self.state_encoder(s_t)
+            phi_t_1 = self.state_encoder(s_t_1)
 
         if self.pretrained == True:
             print('pretrained encoder')
