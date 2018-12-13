@@ -16,58 +16,58 @@ from keras.utils import plot_model
 
 def icm_loss(y_true,y_pred):
     return y_pred
-
-def state_encoder(state_shape, enc_shape):
-    # state -> phi
-    S = Input(shape= state_shape)
-
-    '''
-    x = Convolution2D(32, 3, 3, activation='elu')(S)
-    x = Convolution2D(32, 3, 3, activation='elu')(x)
-    x = Convolution2D(32, 3, 3, activation='elu')(x)
-    x = Convolution2D(32, 3, 3, activation='elu')(x)
-    x = Flatten()(x)
-    '''
-    x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(S)
-    x = ELU(alpha=1.0)(x)
-    x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-    x = ELU(alpha=1.0)(x)
-    x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-    x = ELU(alpha=1.0)(x)
-    x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-    x = ELU(alpha=1.0)(x)
-    x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-    x = ELU(alpha=1.0)(x)
-
-    phi = Flatten()(x)
-    model = Model(input = S, output = phi)
-
-    return model
-
-def forward_model(action_size, enc_shape, output_dim = 288):
-    # phi_t, a_t -> s_t
-
-    phi_t = Input(shape = enc_shape)
-    a_t = Input(shape = action_size)
-
-    x = Concatenate()([phi_t, a_t])
-    x = Dense(256, activation='relu')(x)
-    out = Dense(output_dim, activation='linear')(x)
-
-    model = Model([phi_t,a_t],out)
-    return model
-
-def inverse_model(enc_shape, action_size = (6,)):
-    # phi_t, phi_t+1 -> a_t_hat
-    phi_t = Input(shape = enc_shape)
-    phi_t_1 = Input(shape = enc_shape)
-
-    x = Concatenate()([phi_t, phi_t_1])
-    x = Dense(256, activation='relu')(x)
-    out = Dense(action_size, activation='linear')(x)
-
-    model = Model([phi_t, phi_t_1], out)
-    return model
+#
+# def state_encoder(state_shape, enc_shape):
+#     # state -> phi
+#     S = Input(shape= state_shape)
+#
+#     '''
+#     x = Convolution2D(32, 3, 3, activation='elu')(S)
+#     x = Convolution2D(32, 3, 3, activation='elu')(x)
+#     x = Convolution2D(32, 3, 3, activation='elu')(x)
+#     x = Convolution2D(32, 3, 3, activation='elu')(x)
+#     x = Flatten()(x)
+#     '''
+#     x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(S)
+#     x = ELU(alpha=1.0)(x)
+#     x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
+#     x = ELU(alpha=1.0)(x)
+#     x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
+#     x = ELU(alpha=1.0)(x)
+#     x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
+#     x = ELU(alpha=1.0)(x)
+#     x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
+#     x = ELU(alpha=1.0)(x)
+#
+#     phi = Flatten()(x)
+#     model = Model(input = S, output = phi)
+#
+#     return model
+#
+# def forward_model(action_size, enc_shape, output_dim = 288):
+#     # phi_t, a_t -> s_t
+#
+#     phi_t = Input(shape = enc_shape)
+#     a_t = Input(shape = action_size)
+#
+#     x = Concatenate()([phi_t, a_t])
+#     x = Dense(256, activation='relu')(x)
+#     out = Dense(output_dim, activation='linear')(x)
+#
+#     model = Model([phi_t,a_t],out)
+#     return model
+#
+# def inverse_model(enc_shape, action_size = (6,)):
+#     # phi_t, phi_t+1 -> a_t_hat
+#     phi_t = Input(shape = enc_shape)
+#     phi_t_1 = Input(shape = enc_shape)
+#
+#     x = Concatenate()([phi_t, phi_t_1])
+#     x = Dense(256, activation='relu')(x)
+#     out = Dense(action_size, activation='linear')(x)
+#
+#     model = Model([phi_t, phi_t_1], out)
+#     return model
 
 def sampling(args):
     """Reparameterization trick by sampling fr an isotropic unit Gaussian.
@@ -180,27 +180,32 @@ class icm_class(object):
         '''
 
         if self.vae == True:
-            x = Conv2D(64,(5,5), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
+            x = Conv2D(32,(3,3), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
             x = BatchNormalization(name= 'enc_bn1')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU1')(x)
 
 
-            x = Conv2D(128,(5,5), strides =(2,2),padding='same', name= 'enc_conv2')(x)
+            x = Conv2D(32,(3,3), strides =(2,2),padding='same', name= 'enc_conv2')(x)
             x = BatchNormalization(name= 'enc_bn2')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU2')(x)
 
 
-            x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv3')(x)
+            x = Conv2D(64,(3,3), strides =(2,2),padding='same', name= 'enc_conv3')(x)
             x = BatchNormalization(name= 'enc_bn3')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU3')(x)
 
-            x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv4')(x)
+            x = Conv2D(64,(3,3), strides =(3,2),padding='same', name= 'enc_conv4')(x)
             x = BatchNormalization(name= 'enc_bn4')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU4')(x)
+
+            x = Conv2D(128,(3,3), strides =(2,2),padding='same', name= 'enc_conv5')(x)
+            x = BatchNormalization(name= 'enc_bn5')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU5')(x)
 
             x = Flatten()(x)
             #x = Dense(2048, name = 'enc_dense1')(x)
