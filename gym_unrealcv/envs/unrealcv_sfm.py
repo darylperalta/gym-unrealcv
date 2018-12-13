@@ -172,8 +172,8 @@ class sfmRelative(gym.Env):
                 observation_type = 'rgbd', # 'color', 'depth', 'rgbd'
                 reward_type = 'bbox', # distance, bbox, bbox_distance,
                 docker = False,
-                # resolution = (320,240)
-                resolution = (640,480)
+                resolution = (320,240)
+                # resolution = (640,480)
     ):
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0

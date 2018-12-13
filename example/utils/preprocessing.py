@@ -11,9 +11,12 @@ class preprocessor():
         self.image_high = observation_space.high
         self.image_low = observation_space.low
         self.image_range = self.image_high - self.image_low
+        # print('size: ', self.size)
 
     def resize(self,image):
-        cv_image = cv2.resize(image, self.size)
+        # print('resize to ', self.size)
+        # cv_image = cv2.resize(image, self.size)
+        cv_image = cv2.resize(image, (self.size[1], self.size[0]))
         return cv_image
 
     def color2gray(self,image):
@@ -32,8 +35,12 @@ class preprocessor():
 
     def process_gray(self,image, reset= False):
         resize_image = self.resize(image)
+        # print('resize image shape: ', resize_image.shape)
         gray_image = self.color2gray(resize_image)
         gray_image = gray_image/255.0
+        # print('gray image shape: ', gray_image.shape)
+        # cv2.imshow('gray image ', gray_image)
+        # cv2.waitKey(0)
         if reset:
             #print 'reset'
             for i in range(self.length):
@@ -53,4 +60,3 @@ class preprocessor():
 
         # print img_processed.shape
         return img_processed
-
