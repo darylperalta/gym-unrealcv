@@ -26,13 +26,42 @@ import cv2
 from keras.callbacks import ModelCheckpoint
 from keras.utils import plot_model
 from keras.losses import mse
-from eval_callback import EvalCallBack
+import keras
+# from eval_callback import EvalCallBack
 # channels = 1
 # img_rows = 240
 # img_cols = 320
 # img_shape = (channels, img_rows, img_cols)
 # action_size = 3
 # enc_shape = (288,)
+
+class EvalCallBack(keras.callbacks.Callback):
+    """ This class hacks the callback mechanism through saving trainig status of the network """
+    def __init__(self, env, foldpath= '/home/daryl/gym-unrealcv/example/ddpg_icm_sfm_combined_opt_rotreward_distTarget_enc/out_dir_ae',batch_size=8, interval=1):
+        self.foldpath = foldpath
+        # self.stage = stage
+        self.interval = interval # how many epochs before running evaluation
+        self.env = env
+        self.batch_size = batch_size
+    def run_eval(self, epoch):
+
+        test_image_batch = test_load(self.env,self.batch_size,test = True)
+        out_image = self.model.predict(test_image_batch)
+        for i in range(out_image.shape[0]):
+            # print('out_image shape: ', out_image.shape)
+            input_image_sample = test_image_batch[i]
+            out_image_sample = out_image[i]
+
+            cv2.imwrite(self.foldpath+'/autoencoder_in_ep'+str(epoch)+'_'+str(i)+'.png',(input_image_sample*255).astype(np.uint8))
+            cv2.imwrite(self.foldpath+'/autoencoder_out'+str(epoch)+'_'+str(i)+'.png',(out_image_sample*255).astype(np.uint8))
+
+
+
+    def on_epoch_end(self, epoch, logs=None):
+
+        if (epoch+1) % self.interval == 0:
+            self.run_eval(epoch)
+
 
 def build_encoder(channels = 1,img_rows = 240,img_cols = 320, action_size = 3,enc_shape = (288,)):
 
@@ -299,14 +328,14 @@ def main():
     num_train = 46688
     batch_size = 32
     steps = num_train//batch_size
-    train = False
-    cont = False
-    init_epoch = 0
+    train = True
+    cont = True
+    init_epoch = 8
     # old_model = '/hdd/AIRSCAN/icm_models/autoencoder_checkpointsmodel-50_cont.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae2_checkpointsmodel-13.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae3_checkpointsmodel-10.hdf5'
-    old_model = '/hdd/AIRSCAN/icm_models/vae4_checkpointsmodel-07.hdf5'
-
+    old_model = '/hdd/AIRSCAN/icm_models/vae4_checkpointsmodel-08_cont.hdf5'
+    eval_check = EvalCallBack(env)
     if train == True:
         if cont==True:
             print('loading model: ', old_model)
@@ -347,7 +376,8 @@ def main():
             autoencoder.compile(optimizer = optimizer)
             if cont == True:
                 autoencoder.load_weights(old_model)
-            autoencoder.fit_generator(dataloader(env,batch_size,vae = vae), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer])
+            autoencoder.fit_generator(dataloader(env,batch_size,vae = vae), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer, eval_check])
+            # autoencoder.fit_generator(dataloader(env,batch_size,vae = vae), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=2, shuffle=True, callbacks=[checkpointer, eval_check])
             # autoencoder.compile(optimizer=optimizer, loss = 'mse')
         else:
             optimizer = RMSprop(0.000001)
