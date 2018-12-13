@@ -6,7 +6,7 @@ from keras.models import model_from_json, load_model
 #from keras.engine.training import collect_trainable_weights
 from keras.models import Sequential
 from keras.layers import Dense, Flatten, Input, merge, Activation,Conv2DTranspose, Lambda, Reshape
-from keras.layers import Conv2D, Concatenate,  BatchNormalization
+from keras.layers import Conv2D, Concatenate,  BatchNormalization, LeakyReLU
 from keras.models import Sequential, Model
 from keras.optimizers import Adam, RMSprop
 from keras.layers.advanced_activations import ELU
@@ -26,6 +26,7 @@ import cv2
 from keras.callbacks import ModelCheckpoint
 from keras.utils import plot_model
 from keras.losses import mse
+from eval_callback import EvalCallBack
 # channels = 1
 # img_rows = 240
 # img_cols = 320
@@ -57,30 +58,53 @@ def build_decoder(vae = False, enc_shape= (288,)):
 
     if vae == True:
         latent_inputs = Input(shape=enc_shape, name='z_sampling')
-        x = Dense(5*10*128)(latent_inputs)
+        x = Dense(5*10*256)(latent_inputs)
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
 
-        x = Reshape((5, 10, 128))(x)
+        x = Reshape((5, 10, 256))(x)
 
 
-        x = Conv2DTranspose(64, (3,3), strides=(2,2), padding ='same')(x)
+        # x = Conv2DTranspose(64, (3,3), strides=(2,2), padding ='same')(x)
+        # x = BatchNormalization()(x)
+        # x = Activation('relu')(x)
+        #
+        # x = Conv2DTranspose(64, (3,3), strides=(3,2), padding ='same')(x)
+        # x = BatchNormalization()(x)
+        # x = Activation('relu')(x)
+        #
+        # x = Conv2DTranspose(32,(3,3),strides=(2,2),padding ='same')(x)
+        # x = BatchNormalization()(x)
+        # x = Activation('relu')(x)
+        #
+        # x = Conv2DTranspose(32,(3,3),strides=(2,2),padding ='same')(x)
+        # x = BatchNormalization()(x)
+        # x = Activation('relu')(x)
+        #
+        # x = Conv2DTranspose(1,(3,3),strides=(2,2),padding ='same')(x)
+
+        x = Conv2DTranspose(256, (5,5), strides=(2,2), padding ='same')(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = LeakyReLU(.2)(x)
 
-        x = Conv2DTranspose(64, (3,3), strides=(3,2), padding ='same')(x)
+        x = Conv2DTranspose(256, (5,5), strides=(3,2), padding ='same')(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = LeakyReLU(.2)(x)
 
-        x = Conv2DTranspose(32,(3,3),strides=(2,2),padding ='same')(x)
+        x = Conv2DTranspose(128,(5,5),strides=(2,2),padding ='same')(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = LeakyReLU(.2)(x)
 
-        x = Conv2DTranspose(32,(3,3),strides=(2,2),padding ='same')(x)
+        x = Conv2DTranspose(64,(5,5),strides=(2,2),padding ='same')(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = LeakyReLU(.2)(x)
 
-        x = Conv2DTranspose(1,(3,3),strides=(2,2),padding ='same')(x)
+        x = Conv2DTranspose(64,(5,5),strides=(2,2),padding ='same')(x)
+        x = BatchNormalization()(x)
+        x = LeakyReLU(.2)(x)
+
+
+        x = Conv2DTranspose(1,(5,5),strides=(1,1),padding ='same')(x)
         outputs = Activation('sigmoid')(x)
 
         # instantiate decoder model
@@ -240,10 +264,10 @@ def main():
     img_cols = 320
     img_shape = (channels, img_rows, img_cols)
     action_size = 3
-    enc_shape = (288,)
+    enc_shape = (256,)
 
-    encoder = build_encoder()
-    decoder = build_decoder(vae)
+    encoder = build_encoder(enc_shape = enc_shape)
+    decoder = build_decoder(vae,enc_shape)
 
 
     img_shape = (channels, img_rows, img_cols)
@@ -268,20 +292,20 @@ def main():
     # print('end')
 
     # checkpt_path = '/hdd/AIRSCAN/icm_models/autoencoder_checkpoints'
-    checkpt_path = '/hdd/AIRSCAN/icm_models/vae3_checkpoints'
+    checkpt_path = '/hdd/AIRSCAN/icm_models/vae4_checkpoints' # VAE4 - changed to leaky relu changed kernel_sizess
 
     epochs = 100
     # num_train =26460
     num_train = 46688
     batch_size = 32
     steps = num_train//batch_size
-    train = True
-    cont = True
-    init_epoch = 21
+    train = False
+    cont = False
+    init_epoch = 0
     # old_model = '/hdd/AIRSCAN/icm_models/autoencoder_checkpointsmodel-50_cont.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae2_checkpointsmodel-13.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae3_checkpointsmodel-10.hdf5'
-    old_model = '/hdd/AIRSCAN/icm_models/vae3_checkpointsmodel-21_cont.hdf5'
+    old_model = '/hdd/AIRSCAN/icm_models/vae4_checkpointsmodel-07.hdf5'
 
     if train == True:
         if cont==True:
@@ -295,7 +319,7 @@ def main():
         if vae == True:
             print('compiling VAE encoder')
             # optimizer = RMSprop(0.000001)
-            optimizer = RMSprop(0.000001)
+            optimizer = RMSprop(0.0003)
             image_in_flat = K.flatten(image_in)
             image_out_flat = K.flatten(image_out)
             # reconstruction_loss = mse(image_in,image_out)
@@ -341,13 +365,13 @@ def main():
     else:
         # autoencoder = load_model(old_model)
         autoencoder.load_weights(old_model)
-        encoder_path = '/hdd/AIRSCAN/icm_models/vae3_encoder_checkpointsmodel-21.hdf5'
-        decoder_path = '/hdd/AIRSCAN/icm_models/vae3_decoder_checkpointsmodel-21.hdf5'
+        encoder_path = '/hdd/AIRSCAN/icm_models/vae4_encoder_checkpointsmodel-7.hdf5'
+        decoder_path = '/hdd/AIRSCAN/icm_models/vae4_decoder_checkpointsmodel-7.hdf5'
         encoder.save_weights(encoder_path)
         decoder.save_weights(decoder_path)
 
 
-        encoder2 = build_encoder()
+        encoder2 = build_encoder(enc_shape = enc_shape)
 
 
 
@@ -357,11 +381,11 @@ def main():
         # image_out = decoder2(z)
 
         if vae == True:
-            decoder2 = build_decoder(vae)
+            decoder2 = build_decoder(vae,enc_shape)
             [z_mean, z_log_var, z]= encoder2(image_in)
             image_out = decoder2(z)
         else:
-            decoder2 = build_decoder()
+            decoder2 = build_decoder(enc_shape)
             z = encoder2(image_in)
             image_out = decoder2(z)
 
@@ -375,21 +399,61 @@ def main():
         print('test')
         test_image_batch = test_load(env,batch_size,test = True)
         # out_image = autoencoder.predict(test_image_batch)
-        out_image = autoencoder2.predict(test_image_batch)
-        for i in range(out_image.shape[0]):
-            print('out_image shape: ', out_image.shape)
+        # out_image = autoencoder2.predict(test_image_batch)
+
+        [z_mean_out, z_log_var_out, z_out] = encoder2.predict(test_image_batch)
+        print('max', np.max(z_out))
+        print('min', np.min(z_out))
+        out_image1 = decoder2.predict(z_out)
+        z_out[:,0] += 1.0
+        z_out[:,1] += 1.0
+        z_out[:,2] += 1.0
+        z_out[:,3] += 1.0
+        z_out[:,4] += 1.0
+        z_out[:,5] += 1.0
+        z_out[:,6] += 1.0
+        z_out[:,7] += 1.0
+        z_out[:,8] += 1.0
+        z_out[:,9] += 1.0
+        out_image2 = decoder2.predict(z_out)
+        z_out[:,0] += 2.0
+        z_out[:,1] += 2.0
+        z_out[:,2] += 2.0
+        z_out[:,3] += 2.0
+        z_out[:,4] += 2.0
+        z_out[:,5] += 2.0
+        z_out[:,6] += 2.0
+        z_out[:,7] += 2.0
+        z_out[:,8] += 2.0
+        z_out[:,9] += 2.0
+        out_image3 = decoder2.predict(z_out)
+
+        # for i in range(out_image.shape[0]):
+        for i in range(out_image1.shape[0]):
+            # print('out_image shape: ', out_image.shape)
             input_image_sample = test_image_batch[i]
-            out_image_sample = out_image[i]
-            print(type(out_image_sample))
+            # out_image_sample = out_image[i]
+            out_image_sample1 = out_image1[i]
+            out_image_sample2 = out_image2[i]
+            out_image_sample3 = out_image3[i]
+            # print(type(out_image_sample))
             # out_image_sample = out_image_sample * 255.0
             # out_image_sample =out_image_sample.astype(np.int)
             # print(np.min(out_image_sample))
             # print(np.max(out_image_sample))
             # print(out_image_sample)
+
             cv2.imshow('input',input_image_sample)
-            cv2.imshow('out',out_image_sample)
+            # cv2.imshow('out',out_image_sample)
+            cv2.imshow('out1',out_image_sample1)
+            cv2.imshow('out2',out_image_sample2)
+            cv2.imshow('out3',out_image_sample3)
             cv2.waitKey(0)
 
+
+            # print(old_model+str(i)+'.png')
+            # cv2.imwrite('autoencoder_in'+str(i)+'.png',(input_image_sample*255).astype(np.uint8))
+            # cv2.imwrite('autoencoder_out'+str(i)+'.png',(out_image_sample*255).astype(np.uint8))
 
 if __name__ == '__main__':
     main()

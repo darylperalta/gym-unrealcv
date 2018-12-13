@@ -171,49 +171,62 @@ class icm_class(object):
         # state -> phi
         s_t = Input(shape= state_shape)
 
-        '''
-        x = Convolution2D(32, 3, 3, activation='elu')(S)
-        x = Convolution2D(32, 3, 3, activation='elu')(x)
-        x = Convolution2D(32, 3, 3, activation='elu')(x)
-        x = Convolution2D(32, 3, 3, activation='elu')(x)
-        x = Flatten()(x)
-        '''
-
         if self.vae == True:
-            x = Conv2D(32,(3,3), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
+            # x = Conv2D(32,(3,3), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
+            # x = BatchNormalization(name= 'enc_bn1')(x)
+            # #x = Activation('relu')(x)
+            # x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU1')(x)
+            #
+            #
+            # x = Conv2D(32,(3,3), strides =(2,2),padding='same', name= 'enc_conv2')(x)
+            # x = BatchNormalization(name= 'enc_bn2')(x)
+            # #x = Activation('relu')(x)
+            # x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU2')(x)
+            #
+            #
+            # x = Conv2D(64,(3,3), strides =(2,2),padding='same', name= 'enc_conv3')(x)
+            # x = BatchNormalization(name= 'enc_bn3')(x)
+            # #x = Activation('relu')(x)
+            # x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU3')(x)
+            #
+            # x = Conv2D(64,(3,3), strides =(3,2),padding='same', name= 'enc_conv4')(x)
+            # x = BatchNormalization(name= 'enc_bn4')(x)
+            # #x = Activation('relu')(x)
+            # x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU4')(x)
+            #
+            # x = Conv2D(128,(3,3), strides =(2,2),padding='same', name= 'enc_conv5')(x)
+            # x = BatchNormalization(name= 'enc_bn5')(x)
+            # #x = Activation('relu')(x)
+            # x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU5')(x)
+
+            x = Conv2D(64,(5,5), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
             x = BatchNormalization(name= 'enc_bn1')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU1')(x)
 
 
-            x = Conv2D(32,(3,3), strides =(2,2),padding='same', name= 'enc_conv2')(x)
+            x = Conv2D(64,(5,5), strides =(2,2),padding='same', name= 'enc_conv2')(x)
             x = BatchNormalization(name= 'enc_bn2')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU2')(x)
 
 
-            x = Conv2D(64,(3,3), strides =(2,2),padding='same', name= 'enc_conv3')(x)
+            x = Conv2D(128,(5,5), strides =(2,2),padding='same', name= 'enc_conv3')(x)
             x = BatchNormalization(name= 'enc_bn3')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU3')(x)
 
-            x = Conv2D(64,(3,3), strides =(3,2),padding='same', name= 'enc_conv4')(x)
+            x = Conv2D(256,(5,5), strides =(3,2),padding='same', name= 'enc_conv4')(x)
             x = BatchNormalization(name= 'enc_bn4')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU4')(x)
 
-            x = Conv2D(128,(3,3), strides =(2,2),padding='same', name= 'enc_conv5')(x)
+            x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv5')(x)
             x = BatchNormalization(name= 'enc_bn5')(x)
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU5')(x)
 
             x = Flatten()(x)
-            #x = Dense(2048, name = 'enc_dense1')(x)
-            #x = BatchNormalization(name = 'enc_bn4')(x)
-            #x = Activation('relu', name='z_mean')(x)
-            #x = LeakyReLU(alpha = 0.2, name = 'enc_dense2')(x)
-
-
 
             x_mean = Dense(enc_shape[0], name='x_mean')(x)
             x_mean = BatchNormalization()(x_mean)
