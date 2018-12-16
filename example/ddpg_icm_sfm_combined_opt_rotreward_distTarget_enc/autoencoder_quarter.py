@@ -101,15 +101,17 @@ class preprocessor():
 
 class EvalCallBack(keras.callbacks.Callback):
     """ This class hacks the callback mechanism through saving trainig status of the network """
-    def __init__(self, foldpath= '/home/daryl/gym-unrealcv/example/ddpg_icm_sfm_combined_opt_rotreward_distTarget_enc/out_dir_ae',batch_size=8, interval=1):
+    def __init__(self, foldpath= '/home/daryl/gym-unrealcv/example/ddpg_icm_sfm_combined_opt_rotreward_distTarget_enc/out_dir_ae',batch_size=8,img_rows = 240,img_cols = 320, interval=1):
         self.foldpath = foldpath
         # self.stage = stage
         self.interval = interval # how many epochs before running evaluation
         # self.env = env
         self.batch_size = batch_size
+        self.img_rows = img_rows
+        self.img_cols = img_cols
     def run_eval(self, epoch):
 
-        test_image_batch = test_load(self.batch_size,test = True)
+        test_image_batch = test_load(self.batch_size,test = True,img_rows = self.img_rows,img_cols = self.img_cols)
         out_image = self.model.predict(test_image_batch)
         for i in range(out_image.shape[0]):
             # print('out_image shape: ', out_image.shape)
@@ -127,7 +129,7 @@ class EvalCallBack(keras.callbacks.Callback):
             self.run_eval(epoch)
 
 
-def build_encoder(channels = 1,img_rows = 240,img_cols = 320, action_size = 3,enc_shape = (288,)):
+def build_encoder(channels = 1,img_rows = 120,img_cols = 160, action_size = 3,enc_shape = (288,)):
 
     with tf.device(TF_DEVICE):
         config = tf.ConfigProto()
@@ -192,9 +194,9 @@ def build_decoder(vae = False, enc_shape= (288,)):
         x = BatchNormalization()(x)
         x = LeakyReLU(.2)(x)
 
-        x = Conv2DTranspose(64,(5,5),strides=(2,2),padding ='same')(x)
-        x = BatchNormalization()(x)
-        x = LeakyReLU(.2)(x)
+        # x = Conv2DTranspose(64,(5,5),strides=(2,2),padding ='same')(x)
+        # x = BatchNormalization()(x)
+        # x = LeakyReLU(.2)(x)
 
 
         x = Conv2DTranspose(1,(5,5),strides=(1,1),padding ='same')(x)
@@ -333,7 +335,7 @@ def dataloader(batch_size =32,vae = False, dataset_path = '/home/daryl/datasets/
                             observation = observation*random_brightness
                             np.clip(observation, a_min=0, a_max=1)
 
-                    # print('observation shape', observation.shape)
+                    # print('observation s img_rows = 240,img_cols = 320hape', observation.shape)
                     image_batch[i] = observation[0]
                 if vae ==True:
                     yield image_batch, None
@@ -365,8 +367,8 @@ def test_load(batch_size =32,dataset_path = '/home/daryl/datasets/unreal_images'
 def main():
     vae = True
     channels = 1
-    img_rows = 240
-    img_cols = 320
+    img_rows = 120
+    img_cols = 160
     img_shape = (channels, img_rows, img_cols)
     action_size = 3
     enc_shape = (256,)
@@ -404,6 +406,7 @@ def main():
     num_train = 46688
     batch_size = 16
     steps = num_train//batch_size
+    # steps = 1
     train = True
     cont = False
     init_epoch = 0
@@ -412,7 +415,7 @@ def main():
     # old_model = '/hdd/AIRSCAN/icm_models/vae3_checkpointsmodel-10.hdf5'
     old_model = '/hdd/AIRSCAN/icm_models/vae4_checkpointsmodel-10_cont.hdf5'
     # eval_check = EvalCallBack(env)
-    eval_check = EvalCallBack()
+    eval_check = EvalCallBack(img_rows = img_rows,img_cols = img_cols)
     if train == True:
         if cont==True:
             print('loading model: ', old_model)
@@ -454,7 +457,7 @@ def main():
             autoencoder.compile(optimizer = optimizer, metrics = metrics)
             if cont == True:
                 autoencoder.load_weights(old_model)
-            autoencoder.fit_generator(dataloader(batch_size,vae = vae), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer, eval_check])
+            autoencoder.fit_generator(dataloader(batch_size,img_rows = img_rows,img_cols = img_cols,vae = vae), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer, eval_check])
             # autoencoder.fit_generator(dataloader(env,batch_size,vae = vae), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=2, shuffle=True, callbacks=[checkpointer, eval_check])
             # autoencoder.compile(optimizer=optimizer, loss = 'mse')
         else:
@@ -468,7 +471,7 @@ def main():
             # autoencoder.add_loss(vae_loss)
             # autoencoder.compile(optimizer=optimizer)
             autoencoder.compile(optimizer=optimizer, loss = 'mse')
-            autoencoder.fit_generator(dataloader(batch_size), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer])
+            autoencoder.fit_generator(dataloader(batch_size,img_rows = img_rows,img_cols = img_cols), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer])
         # autoencoder.fit_generator(dataloader(env,batch_size), epochs=epochs, initial_epoch = init_epoch,steps_per_epoch=steps, shuffle=True, callbacks=[checkpointer])
     else:
         # autoencoder = load_model(old_model)

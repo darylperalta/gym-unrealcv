@@ -221,10 +221,11 @@ class icm_class(object):
             #x = Activation('relu')(x)
             x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU4')(x)
 
-            x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv5')(x)
-            x = BatchNormalization(name= 'enc_bn5')(x)
+            if state_shape[0]==240:
+                x = Conv2D(256,(5,5), strides =(2,2),padding='same', name= 'enc_conv5')(x)
+                x = BatchNormalization(name= 'enc_bn5')(x)
             #x = Activation('relu')(x)
-            x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU5')(x)
+                x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU5')(x)
 
             x = Flatten()(x)
 
@@ -287,6 +288,7 @@ class icm_class(object):
 
         if self.pretrained == True:
             print('pretrained encoder')
+            print('path: ', self.enc_path)
             self.state_encoder.trainable = False
             self.state_encoder.load_weights(self.enc_path)
             # self.state_encoder.trainable = False
