@@ -360,6 +360,7 @@ def build_decoder(vae = False, enc_shape= (288,), channels = 1):
         outputs = Activation('sigmoid')(x)
         model = Model(inputs = latent_inputs, outputs = x, name = 'decoder')
         model.summary()
+        plot_model(model, to_file='decoder.png', show_shapes=True)
     return model
 
 
@@ -486,6 +487,9 @@ def test_load(batch_size =32,dataset_path = '/home/justine/datasets/unreal_image
     random.shuffle(imageSet)
     test_image_fn = imageSet[0:batch_size]
 
+    if test == True:
+        print('test image names: ',test_image_fn)
+
     INPUT_HEIGHT = img_rows
     INPUT_WIDTH = img_cols
 
@@ -541,23 +545,25 @@ def main():
 
     # checkpt_path = '/hdd/AIRSCAN/icm_models/autoencoder_checkpoints'
     checkpt_path = '/home/justine/airscan_gym/checkpoints/' # VAE4 - changed to leaky relu changed kernel_sizess
-
+    test_path = '/home/justine/datasets/unreal_images_test'
     epochs = 120
     # num_train =26460
     num_train = 46688
     batch_size = 16
     steps = num_train//batch_size
     # steps = 1
-    train = True
+    train = False
     cont = True
     init_epoch = 60
     # old_model = '/hdd/AIRSCAN/icm_models/autoencoder_checkpointsmodel-50_cont.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae2_checkpointsmodel-13.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae3_checkpointsmodel-10.hdf5'
     # old_model = '/hdd/AIRSCAN/icm_models/vae4_checkpointsmodel-10_cont.hdf5'
-    old_model = '/home/justine/airscan_gym/checkpoints/model-60_cont.hdf5'
+    # old_model = '/home/justine/airscan_gym/checkpoints/model-60_cont.hdf5'
+    old_model = '/home/justine/airscan_gym/checkpoints/backup512/model-70_cont.hdf5'
+
     # eval_check = EvalCallBack(env)
-    eval_check = EvalCallBack(foldpath= '/home/justine/airscan_gym/checkpoints',img_rows = img_rows,img_cols = img_cols)
+    eval_check = EvalCallBack(foldpath= test_path,img_rows = img_rows,img_cols = img_cols)
     if train == True:
         if cont==True:
             print('loading model: ', old_model)
@@ -620,13 +626,17 @@ def main():
     else:
         # autoencoder = load_model(old_model)
         autoencoder.load_weights(old_model)
-        encoder_path = '/hdd/AIRSCAN/icm_models/vae4_encoder_checkpointsmodel-7.hdf5'
-        decoder_path = '/hdd/AIRSCAN/icm_models/vae4_decoder_checkpointsmodel-7.hdf5'
+        # encoder_path = '/hdd/AIRSCAN/icm_models/vae4_encoder_checkpointsmodel-7.hdf5'
+        # decoder_path = '/hdd/AIRSCAN/icm_models/vae4_decoder_checkpointsmodel-7.hdf5'
+        encoder_path = '/home/justine/airscan_gym/checkpoints/ae_checkpoints/encoder-512.hdf5'
+        decoder_path = '/home/justine/airscan_gym/checkpoints/ae_checkpoints/decoder-512.hdf5'
         encoder.save_weights(encoder_path)
         decoder.save_weights(decoder_path)
 
 
-        encoder2 = build_encoder(enc_shape = enc_shape)
+        encoder2 = build_encoder(enc_shape = enc_shape, channels = channels)
+
+
 
 
 
@@ -640,7 +650,7 @@ def main():
             [z_mean, z_log_var, z]= encoder2(image_in)
             image_out = decoder2(z)
         else:
-            decoder2 = build_decoder(enc_shape)
+            decoder2 = build_decoder(vae, enc_shape, channels=channels)
             z = encoder2(image_in)
             image_out = decoder2(z)
 
@@ -652,78 +662,105 @@ def main():
         autoencoder2 = Model(name = 'autoencoder2',inputs=image_in,outputs=image_out)
 
         print('test')
-        test_image_batch = test_load(env,batch_size,test = True)
+        test_image_batch = test_load(batch_size,test = True, test_path = test_path, img_rows = img_rows,img_cols = img_cols, channels=channels)
         # out_image = autoencoder.predict(test_image_batch)
         # out_image = autoencoder2.predict(test_image_batch)
+        if vae == True:
+            [z_mean_out, z_log_var_out, z_out] = encoder2.predict(test_image_batch)
+            print('max', np.max(z_out))
+            print('min', np.min(z_out))
+            out_image1 = decoder2.predict(z_out)
 
-        [z_mean_out, z_log_var_out, z_out] = encoder2.predict(test_image_batch)
-        print('max', np.max(z_out))
-        print('min', np.min(z_out))
-        out_image1 = decoder2.predict(z_out)
-        z_out[:,0] += 1.0
-        z_out[:,1] += 1.0
-        z_out[:,2] += 1.0
-        z_out[:,3] += 1.0
-        z_out[:,4] += 1.0
-        z_out[:,5] += 1.0
-        z_out[:,6] += 1.0
-        z_out[:,7] += 1.0
-        z_out[:,8] += 1.0
-        z_out[:,9] += 1.0
-        z_out[:,10] += 2.0
-        z_out[:,11] += 2.0
-        z_out[:,12] += 2.0
-        z_out[:,13] += 2.0
-        z_out[:,14] += 2.0
-        z_out[:,15] += 2.0
-        z_out[:,16] += 2.0
-        z_out[:,17] += 2.0
-        z_out[:,18] += 2.0
-        z_out[:,19] += 2.0
-        out_image2 = decoder2.predict(z_out)
-        z_out[:,0] += 2.0
-        z_out[:,1] += 2.0
-        z_out[:,2] += 2.0
-        z_out[:,3] += 2.0
-        z_out[:,4] += 2.0
-        z_out[:,5] += 2.0
-        z_out[:,6] += 2.0
-        z_out[:,7] += 2.0
-        z_out[:,8] += 2.0
-        z_out[:,9] += 2.0
-        z_out[:,10] += 2.0
-        z_out[:,11] += 2.0
-        z_out[:,12] += 2.0
-        z_out[:,13] += 2.0
-        z_out[:,14] += 2.0
-        z_out[:,15] += 2.0
-        z_out[:,16] += 2.0
-        z_out[:,17] += 2.0
-        z_out[:,18] += 2.0
-        z_out[:,19] += 2.0
-        out_image3 = decoder2.predict(z_out)
+            z_out[:,0] += 1.0
+            z_out[:,1] += 1.0
+            z_out[:,2] += 1.0
+            z_out[:,3] += 1.0
+            z_out[:,4] += 1.0
+            z_out[:,5] += 1.0
+            z_out[:,6] += 1.0
+            z_out[:,7] += 1.0
+            z_out[:,8] += 1.0
+            z_out[:,9] += 1.0
+            z_out[:,10] += 2.0
+            z_out[:,11] += 2.0
+            z_out[:,12] += 2.0
+            z_out[:,13] += 2.0
+            z_out[:,14] += 2.0
+            z_out[:,15] += 2.0
+            z_out[:,16] += 2.0
+            z_out[:,17] += 2.0
+            z_out[:,18] += 2.0
+            z_out[:,19] += 2.0
+            out_image2 = decoder2.predict(z_out)
+            z_out[:,0] += 2.0
+            z_out[:,1] += 2.0
+            z_out[:,2] += 2.0
+            z_out[:,3] += 2.0
+            z_out[:,4] += 2.0
+            z_out[:,5] += 2.0
+            z_out[:,6] += 2.0
+            z_out[:,7] += 2.0
+            z_out[:,8] += 2.0
+            z_out[:,9] += 2.0
+            z_out[:,10] += 2.0
+            z_out[:,11] += 2.0
+            z_out[:,12] += 2.0
+            z_out[:,13] += 2.0
+            z_out[:,14] += 2.0
+            z_out[:,15] += 2.0
+            z_out[:,16] += 2.0
+            z_out[:,17] += 2.0
+            z_out[:,18] += 2.0
+            z_out[:,19] += 2.0
+            out_image3 = decoder2.predict(z_out)
 
-        # for i in range(out_image.shape[0]):
-        for i in range(out_image1.shape[0]):
-            # print('out_image shape: ', out_image.shape)
-            input_image_sample = test_image_batch[i]
-            # out_image_sample = out_image[i]
-            out_image_sample1 = out_image1[i]
-            out_image_sample2 = out_image2[i]
-            out_image_sample3 = out_image3[i]
-            # print(type(out_image_sample))
-            # out_image_sample = out_image_sample * 255.0
-            # out_image_sample =out_image_sample.astype(np.int)
-            # print(np.min(out_image_sample))
-            # print(np.max(out_image_sample))
-            # print(out_image_sample)
+            for i in range(out_image1.shape[0]):
+                # print('out_image shape: ', out_image.shape)
+                input_image_sample = test_image_batch[i]
+                # out_image_sample = out_image[i]
+                out_image_sample1 = out_image1[i]
+                out_image_sample2 = out_image2[i]
+                out_image_sample3 = out_image3[i]
+                # print(type(out_image_sample))
+                # out_image_sample = out_image_sample * 255.0
+                # out_image_sample =out_image_sample.astype(np.int)
+                # print(np.min(out_image_sample))
+                # print(np.max(out_image_sample))
+                # print(out_image_sample)
 
-            cv2.imshow('input',input_image_sample)
-            # cv2.imshow('out',out_image_sample)
-            cv2.imshow('out1',out_image_sample1)
-            cv2.imshow('out2',out_image_sample2)
-            cv2.imshow('out3',out_image_sample3)
-            cv2.waitKey(0)
+                cv2.imshow('input',input_image_sample)
+                # cv2.imshow('out',out_image_sample)
+                cv2.imshow('out1',out_image_sample1)
+                cv2.imshow('out2',out_image_sample2)
+                cv2.imshow('out3',out_image_sample3)
+                cv2.waitKey(0)
+
+
+        else:
+            z_out = encoder2.predict(test_image_batch)
+            out_image = decoder2.predict(z_out)
+
+            # for i in range(out_image.shape[0]):
+            for i in range(out_image.shape[0]):
+                # print('out_image shape: ', out_image.shape)
+                input_image_sample = test_image_batch[i]
+                out_image_sample = out_image[i]
+                # out_image_sample1 = out_image1[i]
+                # out_image_sample2 = out_image2[i]
+                # out_image_sample3 = out_image3[i]
+                # print(type(out_image_sample))
+                # out_image_sample = out_image_sample * 255.0
+                # out_image_sample =out_image_sample.astype(np.int)
+                # print(np.min(out_image_sample))
+                # print(np.max(out_image_sample))
+                # print(out_image_sample)
+
+                cv2.imshow('input',input_image_sample)
+                cv2.imshow('out',out_image_sample)
+                # cv2.imshow('out1',out_image_sample1)
+                # cv2.imshow('out2',out_image_sample2)
+                # cv2.imshow('out3',out_image_sample3)
+                cv2.waitKey(0)
 
 
             # print(old_model+str(i)+'.png')
