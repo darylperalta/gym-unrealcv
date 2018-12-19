@@ -30,6 +30,7 @@ if __name__ == '__main__':
     ACTION_LOW = env.action_space.low
     print('Action LOW: ', ACTION_LOW) # [0 -45 1]
     INPUT_CHANNELS = env.observation_space.shape[2]
+    print('channels: ', INPUT_CHANNELS)
     OBS_HIGH = env.observation_space.high
     OBS_LOW = env.observation_space.low
     OBS_RANGE = OBS_HIGH - OBS_LOW
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     # channel = 1
     Agent = DDPG_icm(ACTION_SIZE, MEMORY_SIZE, GAMMA,
                  LEARNINGRATE_CRITIC, LEARNINGRATE_ACTOR, TARGET_UPDATE_RATE,
-                 INPUT_HEIGHT, INPUT_WIDTH, 1, icm_lr=LEARNINGRATE_ICM)
+                 INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNELS, enc_shape=ENC_SHAPE, icm_lr=LEARNINGRATE_ICM, pretrained=PRETRAINED, enc_path = ENC_PATH, vae=VAE)
 
     # input size = 84
 
@@ -80,18 +81,23 @@ if __name__ == '__main__':
         start_time = time.time()
         metric_reward = 0
         num_success = 0
-        reward_tot_hist= []
+        # reward_tot_hist= []
         reward_i_hist = []
         reward_dist_hist = []
-        reward_distTarget_hist = []
+        # reward_distTarget_hist = []
         epoch_hist = []
 
         for epoch in range(current_epoch + 1, MAX_EPOCHS + 1, 1):
             obs = env.reset()
             obs_new = obs
             #observation = io_util.preprocess_img(obs)
-            observation = process_img.process_gray(obs,reset=True)
-            # `print('shape of obs:       ', observation.shape)
+            if COLOR == True:
+                observation = process_img.process_color(obs,reset=True)
+            else:
+                observation = process_img.process_gray(obs,reset=True)
+            # print('shape of obs:       ', observation.shape)
+            # cv2.imshow('observation', observation[0])
+            # cv2.waitKey(0)
             cumulated_reward = 0
             cumulated_reward_i = 0
             cumulated_reward_dist = 0
@@ -152,8 +158,10 @@ if __name__ == '__main__':
                     # print('R: ', R)
                     R_distTarget = pose_new[2]/2000
 
-
-                    newObservation = process_img.process_gray(obs_new)
+                    if COLOR == True:
+                        newObservation = process_img.process_color(obs_new)
+                    else:
+                        newObservation = process_img.process_gray(obs_new)
                     #newObservation = io_util.preprocess_img(obs_new)
                     stepCounter += 1
 
@@ -168,8 +176,8 @@ if __name__ == '__main__':
                     reward_i = 0.01 * reward_i
                     reward = 0.1 * reward
                     print('reward_dist, reward_i: , reward_distTarget, l_i', reward, reward_i, R_distTarget, l_i)
-                    reward_total = reward_i + reward
-                    # reward_total = reward_i
+                    # reward_total = reward_i + reward
+                    reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
                     observation = newObservation
@@ -232,10 +240,16 @@ if __name__ == '__main__':
                         pose_new[1] = MAX_elevation
                     elif (pose_new[1] < MIN_elevation):
                         pose_new[1] = MIN_elevation
-
+                    print("Pose: ", pose_new)
                     # obs_new, reward, done, info = env.step(action_env_prev+action_env)
                     obs_new, reward, done, info = env.step(pose_new)
-                    newObservation = process_img.process_gray(obs_new)
+                    # newObservation = process_img.process_gray(obs_new)
+
+                    if COLOR == True:
+                        newObservation = process_img.process_color(obs_new)
+                    else:
+                        newObservation = process_img.process_gray(obs_new)
+
                     #newObservation = io_util.preprocess_img(obs_new)
                     action_batch = np.zeros((1,)+action_env.shape)
                     action_batch[0] = action
@@ -255,10 +269,10 @@ if __name__ == '__main__':
                 #io_util.save_trajectory(info, TRA_DIR, epoch)
 
                 # cumulated_reward += reward
-                cumulated_reward += reward_total
+                # cumulated_reward +=/ reward_total
                 cumulated_reward_i += reward_i
                 cumulated_reward_dist += reward
-                cumulated_reward_distTarget += -R_distTarget
+                # cumulated_reward_distTarget += -R_distTarget
 
 
 
@@ -287,16 +301,16 @@ if __name__ == '__main__':
                         with open(PARAM_DIR + '/' + str(epoch) + '.json','w') as outfile:
                             json.dump(parameter_dictionary, outfile)
 
-                    if TRAIN is True:
-                        reward_tot_hist.append(cumulated_reward)
+#                    if TRAIN is True:
+                        # reward_tot_hist.append(cumulated_reward)
                         reward_i_hist.append(cumulated_reward_i)
                         reward_dist_hist.append(cumulated_reward_dist)
-                        reward_distTarget_hist.append(cumulated_reward_distTarget)
+                        # reward_distTarget_hist.append(cumulated_reward_distTarget)
                         epoch_hist.append(epoch)
 
-                        plt.plot(epoch_hist,reward_tot_hist)
-                        plt.savefig('totalreward.png')
-                        plt.clf()
+                        # plt.plot(epoch_hist,reward_tot_hist)
+                        # plt.savefig('totalreward.png')
+                        # plt.clf()
 
                         plt.plot(epoch_hist,reward_i_hist)
                         plt.savefig('reward_i.png')
@@ -305,10 +319,10 @@ if __name__ == '__main__':
                         plt.plot(epoch_hist,reward_dist_hist)
                         plt.savefig('reward_dist.png')
                         plt.clf()
-
-                        plt.plot(epoch_hist,reward_distTarget_hist)
-                        plt.savefig('reward_distTarget.png')
-                        plt.clf()
+                        #
+                        # plt.plot(epoch_hist,reward_distTarget_hist)
+                        # plt.savefig('reward_distTarget.png')
+                        # plt.clf()
 
 
 

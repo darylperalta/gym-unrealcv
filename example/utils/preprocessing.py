@@ -33,6 +33,32 @@ class preprocessor():
         normalized_image = (image - self.image_low) / (self.image_range)
         return  normalized_image
 
+    # def process_color(self,image, reset=False):
+    #     resize_image = self.resize(image)
+    #     resize_image = self.reshape(resize_image)
+    #     color_image = resize_image/255.0
+    #
+    #     return color_image
+
+    def process_color(self,image, reset=False):
+        resize_image = self.resize(image)
+        if K.image_dim_ordering() == 'tf':
+            color_image = np.zeros((1,self.size[0], self.size[1],  self.image_channels))
+        else:
+            color_image = np.zeros((1,self.image_channels, self.size[0], self.size[1]))
+        color_image[0]= resize_image/255.0
+        # resize_image = self.reshape(resize_image)
+        # color_image = resize_image/255.0
+
+        return color_image
+
+    def process_color_ae(self,image, reset=False):
+        resize_image = self.resize(image)
+        # resize_image = self.reshape(resize_image)
+        color_image = resize_image/255.0
+
+        return color_image
+
     def process_gray(self,image, reset= False):
         resize_image = self.resize(image)
         # print('resize image shape: ', resize_image.shape)

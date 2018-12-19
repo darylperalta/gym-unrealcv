@@ -248,16 +248,38 @@ class icm_class(object):
 
         else:
 
-            x = Conv2D(32, (3,3), padding='same', strides=(2, 2))(s_t)
-            x = ELU(alpha=1.0)(x)
-            x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
-            x = ELU(alpha=1.0)(x)
-            x = Conv2D(64, (3, 3), padding='same', strides=(2, 2))(x)
-            x = ELU(alpha=1.0)(x)
-            x = Conv2D(64, (3, 3), padding='same', strides=(3, 2))(x)
-            x = ELU(alpha=1.0)(x)
-            x = Conv2D(128, (3, 3), padding='same', strides=(2, 2))(x)
-            x = ELU(alpha=1.0)(x)
+            # x = Conv2D(32, (3,3), padding='same', strides=(2, 2))(s_t)
+            # x = ELU(alpha=1.0)(x)
+            # x = Conv2D(32, (3, 3), padding='same', strides=(2, 2))(x)
+            # x = ELU(alpha=1.0)(x)
+            # x = Conv2D(64, (3, 3), padding='same', strides=(2, 2))(x)
+            # x = ELU(alpha=1.0)(x)
+            # x = Conv2D(64, (3, 3), padding='same', strides=(3, 2))(x)
+            # x = ELU(alpha=1.0)(x)
+            # x = Conv2D(128, (3, 3), padding='same', strides=(2, 2))(x)
+            # x = ELU(alpha=1.0)(x)
+
+            x = Conv2D(64,(5,5), strides =(2,2),padding='same', name= 'enc_conv1')(s_t)
+            x = BatchNormalization(name= 'enc_bn1')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU1')(x)
+
+
+            x = Conv2D(64,(5,5), strides =(2,2),padding='same', name= 'enc_conv2')(x)
+            x = BatchNormalization(name= 'enc_bn2')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2, name = 'enc_LReLU2')(x)
+
+
+            x = Conv2D(128,(5,5), strides =(2,2),padding='same', name= 'enc_conv3')(x)
+            x = BatchNormalization(name= 'enc_bn3')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU3')(x)
+
+            x = Conv2D(256,(5,5), strides =(3,2),padding='same', name= 'enc_conv4')(x)
+            x = BatchNormalization(name= 'enc_bn4')(x)
+            #x = Activation('relu')(x)
+            x = LeakyReLU(alpha = 0.2,name = 'enc_LReLU4')(x)
 
             x = Flatten()(x)
             phi = Dense(enc_shape[0], name='phi')(x)
