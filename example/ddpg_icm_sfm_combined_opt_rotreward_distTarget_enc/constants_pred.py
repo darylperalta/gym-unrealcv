@@ -2,7 +2,8 @@
 ENV_NAME = 'curiosityChangePos-v0'
 
 CONTINUE = True
-RESTART_EP = 550
+# RESTART_EP = 300
+RESTART_EP = 850
 
 TRAIN = False
 SHOW = True
@@ -23,9 +24,12 @@ MEMORY_SIZE = 50000
 LEARN_START_STEP = 10000
 MAX_EXPLORE_STEPS = 20000
 
-INPUT_SIZE = 84 # pre 100
-INPUT_WIDTH = 320 # pre 100
-INPUT_HEIGHT = 240 # pre 100
+# INPUT_SIZE = 84 # pre 100
+# INPUT_WIDTH = 320 # pre 100
+# INPUT_HEIGHT = 240 # pre 100
+
+INPUT_WIDTH = 160 # pre 100
+INPUT_HEIGHT = 120
 
 BATCH_SIZE = 32
 LEARNINGRATE_CRITIC  = 0.001
@@ -39,7 +43,7 @@ FINAL_EPSILON = 0.1  # final value of epsilon
 
 
 TEST_INTERVAL_EPOCHS = 1000
-SAVE_INTERVAL_EPOCHS = 500
+SAVE_INTERVAL_EPOCHS = 200
 
 LOG_NAME_SAVE = 'log'
 MONITOR_DIR = LOG_NAME_SAVE + '/monitor/' #the path to save monitor file
@@ -61,3 +65,9 @@ params_json = LOG_NAME_READ + '/param/' + str(RESTART_EP) + '.json'
 # IMAGE_PATH = LOG_NAME_SAVE + '/images'
 # IMAGE_PATH = '/home/daryl/OpenDroneMap_v0_3_1/images_icm'
 IMAGE_PATH = LOG_NAME_SAVE
+PRETRAINED = True
+ENC_SHAPE = (512,)
+# ENC_PATH = '/hdd/AIRSCAN/icm_models/vae4_encoder_checkpointsmodel-7.hdf5'
+ENC_PATH = '/home/daryl/gym-unrealcv/example/ddpg_icm_sfm_combined_opt_rotreward_distTarget_enc/state_encoder/encoder-512.hdf5'
+VAE =False
+COLOR = True
