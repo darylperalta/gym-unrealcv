@@ -153,7 +153,7 @@ class DDPG:
 class DDPG_icm:
     def __init__(self, outputs, memorySize, discountFactor,
                  learningRate_Critic, learningRate_Actor, target_update_rate,
-                 img_rows, img_cols, img_channels, enc_shape=(288,), icm_lr =0.001):
+                 img_rows, img_cols, img_channels, enc_shape=(288,), icm_lr =0.001, pretrained=True, enc_path = '/hdd/AIRSCAN/icm_models/vae4_encoder_checkpointsmodel-7.hdf5', vae =True):
         """
         Parameters:
             - outputs: output size
@@ -192,7 +192,7 @@ class DDPG_icm:
         print('critic')
 
         # self.forward = forward_dynamics(self.sess,self.img_shape, self.action_size, self.enc_shape,  self.icm_lr)
-        self.icm = icm_class(self.sess,self.img_shape, self.action_size, self.enc_shape,  self.icm_lr)
+        self.icm = icm_class(self.sess,self.img_shape, self.action_size, self.enc_shape,  self.icm_lr, pretrained = pretrained, enc_path=enc_path, vae=vae)
     def get_intrinsic_reward(self,observation, action, obs_new):
         return self.icm.get_intrinsic_reward(observation, action, obs_new)
 
