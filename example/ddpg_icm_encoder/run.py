@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-from constants import *
-# from constants_pred import *
+# from constants import *
+from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -132,12 +132,12 @@ if __name__ == '__main__':
 
                     # print('pose_new: ', pose_new)
                     obs_new, reward, done, info = env.step(pose_new)
-                    _,_,R,_ = getMatrices(obs_prev,obs_new)
-                    R2= eulerAnglesToRotationMatrix(action_env)
+                    # _,_,R,_ = getMatrices(obs_prev,obs_new)
+                    # R2= eulerAnglesToRotationMatrix(action_env)
                     # print('R diff: ', R2-R)
-                    rdiff = R2-R
-                    r_rot = - np.mean(np.square(rdiff))
-                    print('rdiff: ', r_rot)
+                    # rdiff = R2-R
+                    # r_rot = - np.mean(np.square(rdiff))
+                    # print('rdiff: ', r_rot)
                     # print('R: ', R)
 
                     # print('action_env: ',action_env)
@@ -157,7 +157,8 @@ if __name__ == '__main__':
                     # reward_total = 0.2*reward_i + 0.8*reward
                     # reward_total = 0.8*reward_i + 0.2*reward
                     # reward_total = 0.6*reward_i + 0.2*reward + 0.2*r_rot
-                    reward_total = 0.5*reward_i + 0.5*r_rot
+                    # reward_total = 0.5*reward_i + 0.5*r_rot
+                    reward_total = 0.5*reward_i
                     # reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
@@ -186,28 +187,34 @@ if __name__ == '__main__':
                     #     action_batch_norm[0][i] = max(0,action_batch_norm[0][i])
                     #     action_batch_norm[0][i] = min(1,action_batch_norm[0][i])
                     # action = action_batch_norm[0]
-                    filename = '/ob%d'%t
-                    # filename = LOG_NAME_SAVE+filename + '.png'
-                    IMAGE_PATH2 = '_EP%d' % t
-                    IMAGE_PATH2 = IMAGE_PATH + IMAGE_PATH2
-                    os.mkdir(IMAGE_PATH2)
-                    # filename = IMAGE_PATH + '/images' + filename + '.png'
-                    IMAGE_PATH2_images = IMAGE_PATH2+'/images'
-                    os.mkdir(IMAGE_PATH2_images)
+                    # Run OpenSfM
+                    # filename = '/ob%d'%t
+                    # # filename = LOG_NAME_SAVE+filename + '.png'
+                    # IMAGE_PATH2 = '_EP%d' % t
+                    # IMAGE_PATH2 = IMAGE_PATH + IMAGE_PATH2
+                    # os.mkdir(IMAGE_PATH2)
+                    # # filename = IMAGE_PATH + '/images' + filename + '.png'
+                    # IMAGE_PATH2_images = IMAGE_PATH2+'/images'
+                    # os.mkdir(IMAGE_PATH2_images)
+                    #
+                    # IMAGE_PATH2_OLD = '_EP%d' % (t-1)
+                    # IMAGE_PATH2_OLD = IMAGE_PATH + IMAGE_PATH2_OLD
+                    # IMAGE_PATH2_OLD_images = IMAGE_PATH2_OLD + '/images'
+                    #
+                    #
+                    # copy_cmd = 'cp -r '+IMAGE_PATH2_OLD+ ' ' +IMAGE_PATH2
+                    #
+                    # os.system(copy_cmd)
+                    # filename = IMAGE_PATH2 + '/images' + filename + '.png'
+                    # cv2.imwrite(filename,obs_new)
 
-                    IMAGE_PATH2_OLD = '_EP%d' % (t-1)
-                    IMAGE_PATH2_OLD = IMAGE_PATH + IMAGE_PATH2_OLD
-                    IMAGE_PATH2_OLD_images = IMAGE_PATH2_OLD + '/images'
-
-
-                    copy_cmd = 'cp -r '+IMAGE_PATH2_OLD+ ' ' +IMAGE_PATH2
-
-                    os.system(copy_cmd)
-                    filename = IMAGE_PATH2 + '/images' + filename + '.png'
+                    # Without OpenSfM
+                    filename = 'log/ob%d'%t
+                    filename = filename + '.png'
                     cv2.imwrite(filename,obs_new)
 
-                    print('Reconstructing images...')
-                    print(IMAGE_PATH)
+                    # print('Reconstructing images...')
+                    # print(IMAGE_PATH)
                     # ret_val = run_opensfm(IMAGE_PATH, DEPTHMAPS_PATH,t)
                     # DEPTHMAPS_PATH2 = '_EP%d' % t
                     # DEPTHMAPS_PATH2 = DEPTHMAPS_PATH + DEPTHMAPS_PATH2
@@ -223,13 +230,23 @@ if __name__ == '__main__':
                     print('action env: ', action_env)
 
                     pose_new = pose_prev + action_env
-                    if pose_new[2] > 2000:
-                        pose_new[2] = 2000
-                    if (pose_new[1] > 65):
-                        pose_new[1] = 65
-                    elif (pose_new[1]<25):
-                        pose_new[1] = 25
+                    # if pose_new[2] > 2000:
+                    #     pose_new[2] = 2000
+                    # if (pose_new[1] > 65):
+                    #     pose_new[1] = 65
+                    # elif (pose_new[1]<25):
+                    #     pose_new[1] = 25
 
+                    if pose_new[2] > MAX_distance:
+                        pose_new[2] = MAX_distance
+                    elif pose_new[2] < MIN_distance:
+                        pose_new[2] = MIN_distance
+                    if (pose_new[1] > MAX_elevation):
+                        pose_new[1] = MAX_elevation
+                    elif (pose_new[1] < MIN_elevation):
+                        pose_new[1] = MIN_elevation
+
+                    print('pose: ', pose_new)
                     # obs_new, reward, done, info = env.step(action_env_prev+action_env)
                     obs_new, reward, done, info = env.step(pose_new)
                     newObservation = process_img.process_gray(obs_new)

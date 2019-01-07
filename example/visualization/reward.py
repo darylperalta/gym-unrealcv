@@ -35,19 +35,21 @@ class LivePlot(object):
         matplotlib.rcParams.update({'font.size': 15})
 
     def plot(self, full=True, dots=False, average=0, interpolated=0):
-        print self.outdir
+        print(self.outdir)
         results = monitoring.load_results(self.outdir)
+        # print(results)
 
         data =  results[self.data_key]
         steps = results['episode_lengths']
         #print steps
         count_steps = 0
+        print('steps length', len(steps))
         for i in range(len(steps)):
             count_steps += steps[i]
             steps[i] = count_steps
-
+        print(steps)
         avg_data = []
-
+        # print('full', full)
         if full:
             plt.plot(steps,data, color='blue')
         if dots:
@@ -69,11 +71,13 @@ class LivePlot(object):
         if interpolated > 0:
             avg_data = []
             avg_data_points = []
-            n = len(data)/interpolated
+            n = int(len(data)/interpolated)
             if n == 0:
                 n = 1
             data_fix = 0
             for i, val in enumerate(data):
+                # print('i', i)
+                # print('n', n)
                 if i%n==0:
                     if (i+n) <= len(data)+n:
                         avg =  sum(data[i:i+n])/n
@@ -81,13 +85,13 @@ class LivePlot(object):
                         avg_data_points.append(i)
                 if (i+n) == len(data):
                     data_fix = n
-            
+
             x = np.arange(len(avg_data))
             y = np.array(avg_data)
 
             interp = pchip(avg_data_points, avg_data)
             xx = np.linspace(0, len(data)-data_fix, 1000)
-            plt.plot(xx, interp(xx), color='green', linewidth=3.5)        
+            plt.plot(xx, interp(xx), color='green', linewidth=3.5)
 
         # pause so matplotlib will display
         # may want to figure out matplotlib animation or use a different library in the future
@@ -99,7 +103,8 @@ def expand(lst, n):
     return lst
 
 def pause():
-    programPause = raw_input("Press the <ENTER> key to finish...")
+    # programPause = raw_input("Press the <ENTER> key to finish...")
+    programPause = input("Press the <ENTER> key to finish...")
 
 if __name__ == '__main__':
 
@@ -107,8 +112,8 @@ if __name__ == '__main__':
     parser.add_argument("-p","--path", type=str, default='../dqn/log_multi/monitor/tmp', help="the path of monitor file")
     parser.add_argument("-f", "--full", action='store_true', help="print the full data plot with lines")
     parser.add_argument("-d", "--dots", action='store_true', help="print the full data plot with dots")
-    parser.add_argument("-a", "--average", type=int, nargs='?', const=100, metavar="N", help="plot an averaged graph using N as average size delimiter. Default = 50")
-    parser.add_argument("-i", "--interpolated", type=int, nargs='?', const=50, metavar="M", help="plot an interpolated graph using M as interpolation amount. Default = 50")
+    parser.add_argument("-a", "--average", type=int, nargs='?', const=100, metavar="N", default =50, help="plot an averaged graph using N as average size delimiter. Default = 50")
+    parser.add_argument("-i", "--interpolated", type=int, nargs='?', const=50, metavar="M", default = 50, help="plot an interpolated graph using M as interpolation amount. Default = 50")
     args = parser.parse_args()
 
     #print args.path
