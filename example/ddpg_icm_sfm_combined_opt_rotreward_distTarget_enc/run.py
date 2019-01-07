@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-# from constants import *
-from constants_pred import *
+from constants import *
+# from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -271,7 +271,7 @@ if __name__ == '__main__':
                 # cumulated_reward += reward
                 # cumulated_reward +=/ reward_total
                 cumulated_reward_i += reward_i
-                cumulated_reward_dist += reward
+                # cumulated_reward_dist += reward
                 # cumulated_reward_distTarget += -R_distTarget
 
 
@@ -304,7 +304,7 @@ if __name__ == '__main__':
 #                    if TRAIN is True:
                         # reward_tot_hist.append(cumulated_reward)
                         reward_i_hist.append(cumulated_reward_i)
-                        reward_dist_hist.append(cumulated_reward_dist)
+                        # reward_dist_hist.append(cumulated_reward_dist)
                         # reward_distTarget_hist.append(cumulated_reward_distTarget)
                         epoch_hist.append(epoch)
 
@@ -312,13 +312,19 @@ if __name__ == '__main__':
                         # plt.savefig('totalreward.png')
                         # plt.clf()
 
-                        plt.plot(epoch_hist,reward_i_hist)
-                        plt.savefig('reward_i.png')
-                        plt.clf()
+                        reward_keys =['rewards_i']
+                        reward_values = [reward_i_hist]
+                        reward_dictionary = dict(zip(reward_keys, reward_values))
+                        with open(PARAM_DIR + '/'+'rewards.json','w') as outfile:
+                            json.dump(reward_dictionary, outfile)
 
-                        plt.plot(epoch_hist,reward_dist_hist)
-                        plt.savefig('reward_dist.png')
-                        plt.clf()
+                        # plt.plot(epoch_hist,reward_i_hist)
+                        # plt.savefig('reward_i.png')
+                        # plt.clf()
+                        #
+                        # plt.plot(epoch_hist,reward_dist_hist)
+                        # plt.savefig('reward_dist.png')
+                        # plt.clf()
                         #
                         # plt.plot(epoch_hist,reward_distTarget_hist)
                         # plt.savefig('reward_distTarget.png')
