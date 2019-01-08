@@ -121,11 +121,14 @@ if __name__ == '__main__':
                 start_req = time.time()
 
                 if EXPLORE is True: #explore
-                    action = Agent.feedforward(observation, explorationRate)
+                    action, qValues = Agent.feedforward(observation, explorationRate)
+                    action_batch = np.zeros((1,)+qValues.shape)
+                    action_batch[0,action] = 1
 
                     # action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
                     # action_env = np.array(env.discrete_actions[action])
-                    print('action type ', type(action))
+                    #print('action type ', type(action))
+                    #print('action batch: ',action_batch)
                     action_env = np.array(discrete_actions[action])
                     # print('action env', action_env)
                     # print(action_env.type)
@@ -142,9 +145,10 @@ if __name__ == '__main__':
                     elif (pose_new[1] < MIN_elevation):
                         pose_new[1] = MIN_elevation
 
-                    print('action', action)
+                    #print('action', action)
                     print('action env', action_env)
-                    print('pose_new', pose_new)
+                    #print('pose_new', pose_new)
+                    #print('qValues', qValues)
                     obs_new, reward, done, info = env.step(pose_new)
                     #newObservation = io_util.preprocess_img((obs_new-OBS_LOW)/OBS_RANGE)
                     newObservation = process_img.process_gray(obs_new)
@@ -156,8 +160,8 @@ if __name__ == '__main__':
 
                     stepCounter += 1
 
-                    reward_i, l_i = Agent.get_intrinsic_reward(observation, action, newObservation)
-                    reward = reward_i
+                    reward_i, l_i = Agent.get_intrinsic_reward(observation, action_batch, newObservation)
+                    reward = reward_i * 0.01
                     Agent.addMemory(observation, action, reward, newObservation, done)
 
                     pose_prev = pose_new
@@ -191,6 +195,7 @@ if __name__ == '__main__':
 
                 cumulated_reward += reward
                 if done:
+                    print(cumulated_reward)
                     m, s = divmod(int(time.time() - start_time + loadsim_seconds), 60)
                     h, m = divmod(m, 60)
 

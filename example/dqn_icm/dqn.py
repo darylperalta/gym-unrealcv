@@ -347,14 +347,16 @@ class DeepQ_icm:
         X_batch = np.array(state_batch)
         Y_batch = np.array(qValues_batch)
 
+        action_onehat = np.zeros(qValues_batch.shape)
         for i,action in enumerate(action_batch):
             Y_batch[i][action] = Y_sample_batch[i]
+            action_onehat[i][action] = 1
 
         if icm_only == False:
             self.model.fit(X_batch, Y_batch, validation_split=0.0, batch_size = miniBatchSize, nb_epoch=1, verbose = 0)
-            self.icm.train(np.array(state_batch), np.array(action_batch), np.array(newState_batch), miniBatchSize)
+            self.icm.train(np.array(state_batch), np.array(action_onehat), np.array(newState_batch), miniBatchSize)
         else:
-            self.icm.train(state_batch, action_batch, np.array(newState_batch), miniBatchSize)
+            self.icm.train(np.array(state_batch), np.array(action_onehat), np.array(newState_batch), miniBatchSize)
 
         if self.useTargetNetwork and self.count_steps % 1000 == 0:
             self.updateTargetNetwork()
@@ -375,4 +377,4 @@ class DeepQ_icm:
     def feedforward(self,observation,explorationRate):
         qValues = self.getQValues(observation)
         action = self.selectAction(qValues, explorationRate)
-        return action
+        return action, qValues
