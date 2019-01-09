@@ -10,7 +10,7 @@ import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 from example.utils import memory
 import keras.backend as K
-from constants import *
+# from constants import *
 from icm_model import icm_class
 
 class DeepQ:
@@ -362,16 +362,23 @@ class DeepQ_icm:
             self.updateTargetNetwork()
 
 
-    def saveModel(self, path):
+    def saveModel(self, path,state_encoder_weights_path,inverse_model_weights_path,forward_model_weights_path):
         if self.useTargetNetwork:
             self.targetModel.save(path)
         else:
             self.model.save(path)
+        self.icm.state_encoder.save_weights(state_encoder_weights_path)
+        self.icm.inverse_model.save_weights(inverse_model_weights_path)
+        self.icm.forward_model.save_weights(forward_model_weights_path)
 
-    def loadWeights(self, path):
+    def loadWeights(self, path,state_encoder_weights_path,inverse_model_weights_path,forward_model_weights_path):
         self.model.load_weights(path)
         if self.useTargetNetwork:
             self.targetModel.load_weights(path)
+        self.icm.state_encoder.load_weights(state_encoder_weights_path)
+        self.icm.inverse_model.load_weights(inverse_model_weights_path)
+        self.icm.forward_model.load_weights(forward_model_weights_path)
+
 
 
     def feedforward(self,observation,explorationRate):

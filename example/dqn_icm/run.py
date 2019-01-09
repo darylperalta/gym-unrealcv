@@ -81,11 +81,13 @@ if __name__ == '__main__':
                 INPUT_HEIGHT,
                 INPUT_WIDTH,
                 INPUT_CHANNELS,
-                USE_TARGET_NETWORK
+                USE_TARGET_NETWORK,
+                enc_shape=ENC_SHAPE, icm_lr =LEARNINGRATE_ICM, pretrained=PRETRAINED,
+                enc_path = ENC_PATH, vae =VAE
             )
             print('weights path: ', weights_path)
 
-            Agent.loadWeights(weights_path)
+            Agent.loadWeights(weights_path,state_encoder_weights_path,inverse_model_weights_path,forward_model_weights_path)
             io_util.clear_monitor_files(MONITOR_DIR + 'tmp')
             copy_tree(monitor_path, MONITOR_DIR + 'tmp')
             env = wrappers.Monitor(env, MONITOR_DIR + 'tmp', write_upon_reset=True,resume=True)
@@ -95,11 +97,12 @@ if __name__ == '__main__':
     #main loop
     try:
         start_time = time.time()
+        reward_i_hist = []
         for epoch in range(current_epoch, MAX_EPOCHS, 1):
             obs = env.reset()
 
             #observation = io_util.preprocess_img((obs-OBS_LOW)/OBS_RANGE)
-            observation = process_img.process_gray(obs, reset=True) # converts to gray
+            # observation = process_img.process_gray(obs, reset=True) # converts to gray
 
             if COLOR == True:
                 observation = process_img.process_color(obs,reset=True)
@@ -107,6 +110,8 @@ if __name__ == '__main__':
                 observation = process_img.process_gray(obs,reset=True)
 
             cumulated_reward = 0
+
+            cumulated_reward_i = 0
             if (epoch % TEST_INTERVAL_EPOCHS != 0 or stepCounter < LEARN_START_STEP) and TRAIN is True :  # explore
                 print('EXPLORE')
                 EXPLORE = True
@@ -170,11 +175,13 @@ if __name__ == '__main__':
                         print("Starting learning")
 
                     if Agent.getMemorySize() >= LEARN_START_STEP:
+                        # print('train all nets')
                         Agent.learnOnMiniBatch(BATCH_SIZE,icm_only=False)
 
                         if explorationRate > FINAL_EPSILON and stepCounter > LEARN_START_STEP:
                             explorationRate -= (INITIAL_EPSILON - FINAL_EPSILON) / MAX_EXPLORE_STEPS
                     elif Agent.getMemorySize() >= LEARN_START_STEP_ICM:
+                        # print('icm_only')
                         Agent.learnOnMiniBatch(BATCH_SIZE,icm_only=True)
                         #elif stepCounter%(MAX_EXPLORE_STEPS * 1.5) == 0 :
                             #explorationRate = 0.99
@@ -182,20 +189,45 @@ if __name__ == '__main__':
 
                 #test
                 else:
-                    action = Agent.feedforward(observation,0)
-                    obs_new, reward, done, info = env.step(action)
+                    # action = Agent.feedforward(observation,0)
+                    action, qValues = Agent.feedforward(observation, explorationRate)
+                    action_batch = np.zeros((1,)+qValues.shape)
+                    action_batch[0,action] = 1
+
+                    action_env = np.array(discrete_actions[action])
+                    # print('action env', action_env)
+                    # print(action_env.type)
+                    # obs_new, reward, done, info = env.step(action_env)
+
+                    pose_new = pose_prev + action_env
+                    # pose_new = pose_prev + np.array([30,0,0]) # to test ICM
+                    if pose_new[2] > MAX_distance:
+                        pose_new[2] = MAX_distance
+                    elif pose_new[2] < MIN_distance:
+                        pose_new[2] = MIN_distance
+                    if (pose_new[1] > MAX_elevation):
+                        pose_new[1] = MAX_elevation
+                    elif (pose_new[1] < MIN_elevation):
+                        pose_new[1] = MIN_elevation
+
+                    #print('action', action)
+                    print('action env', action_env)
+
+                    # obs_new, reward, done, info = env.step(action)
+                    obs_new, reward, done, info = env.step(pose_new)
                     newObservation = process_img.process_gray(obs_new)
                     #newObservation = io_util.preprocess_img((obs_new-OBS_LOW)/OBS_RANGE)
                     observation = newObservation
-
+                    pose_prev = pose_new
                 if MAP:
                     io_util.live_plot(info)
 
                 #io_util.save_trajectory(info,TRA_DIR,epoch)
 
-                cumulated_reward += reward
+                cumulated_reward_i += reward
+                cumulated_reward = cumulated_reward_i
                 if done:
-                    print(cumulated_reward)
+                    print(cumulated_reward_i)
                     m, s = divmod(int(time.time() - start_time + loadsim_seconds), 60)
                     h, m = divmod(m, 60)
 
@@ -205,7 +237,7 @@ if __name__ == '__main__':
                     if epoch % SAVE_INTERVAL_EPOCHS == 0 and TRAIN is True:
                         # save model weights and monitoring data
                         print('Save model')
-                        Agent.saveModel(MODEL_DIR + '/dqn_ep' + str(epoch) + '.h5')
+                        Agent.saveModel(MODEL_DIR + '/dqn_ep' + str(epoch) + '.h5',MODEL_DIR + '/dqn_ep' + str(epoch) + 'StateEncoder.h5',MODEL_DIR + '/dqn_ep' + str(epoch) + 'InverseModel.h5',MODEL_DIR + '/dqn_ep' + str(epoch) + 'ForwardModel.h5')
 
                         #backup monitor file
                         copy_tree(MONITOR_DIR+ 'tmp', MONITOR_DIR + str(epoch))
@@ -216,7 +248,12 @@ if __name__ == '__main__':
                         with open(PARAM_DIR + '/dqn_ep' + str(epoch) + '.json','w') as outfile:
                             json.dump(parameter_dictionary, outfile)
 
-
+                        reward_i_hist.append(cumulated_reward_i)
+                        reward_keys =['rewards_i']
+                        reward_values = [reward_i_hist]
+                        reward_dictionary = dict(zip(reward_keys, reward_values))
+                        with open(PARAM_DIR + '/'+'rewards.json','w') as outfile:
+                            json.dump(reward_dictionary, outfile)
 
                     break
 
