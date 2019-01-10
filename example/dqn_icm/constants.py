@@ -15,13 +15,16 @@ MAX_distance = 2000
 
 TF_DEVICE = '/gpu:0'
 MAX_EPOCHS = 10000 # max episode number
-MEMORY_SIZE = 50000
+# MEMORY_SIZE = 50000
+MEMORY_SIZE = 5000
 # LEARN_START_STEP = 10000
 # LEARN_START_STEP = 10000
 LEARN_START_STEP = 1800
+# LEARN_START_STEP = 108
 # INPUT_SIZE = 84
 
 LEARN_START_STEP_ICM = 396
+# LEARN_START_STEP_ICM = 36
 # MAX_EXPLORE_STEPS = 50000
 MAX_EXPLORE_STEPS = 21000
 
@@ -31,15 +34,17 @@ INPUT_HEIGHT = 120
 BATCH_SIZE = 32
 LEARNING_RATE = 1e-3  # 1e6
 GAMMA = 0.95
-INITIAL_EPSILON = 0.01  # starting value of epsilon
-FINAL_EPSILON = 0.1  # final value of epsilon
+# INITIAL_EPSILON = 0.01  # starting value of epsilon
+INITIAL_EPSILON = 0.8  # starting value of epsilon
+# FINAL_EPSILON = 0.1  # final value of epsilon
+FINAL_EPSILON = 0.01  # final value of epsilon
 
 MAX_EXPLORE_STEPS = 20000
 # TEST_INTERVAL_EPOCHS = 100000
-TEST_INTERVAL_EPOCHS = 1000
+TEST_INTERVAL_EPOCHS = 1050
 # SAVE_INTERVAL_EPOCHS = 500
+# SAVE_INTERVAL_EPOCHS = 25
 SAVE_INTERVAL_EPOCHS = 25
-
 LEARNINGRATE_ICM = 0.0001
 
 LOG_NAME_SAVE = 'log'
@@ -51,7 +56,10 @@ TRA_DIR = LOG_NAME_SAVE + '/trajectory.csv' # the path to save trajectory
 LOG_NAME_READ = 'log'
 #the path to reload weights, monitor and params
 weights_path = LOG_NAME_READ + '/model/dqn_ep' + str(RESTART_EP)+ '.h5'
-monitor_path = LOG_NAME_READ + '/monit` or/'+ str(RESTART_EP)
+state_encoder_weights_path = LOG_NAME_READ + '/model/dqn_ep' + str(RESTART_EP) + 'StateEncoder.h5'
+inverse_model_weights_path = LOG_NAME_READ + '/model/dqn_ep' + str(RESTART_EP) + 'InverseModel.h5'
+forward_model_weights_path = LOG_NAME_READ + '/model/dqn_ep' + str(RESTART_EP) + 'ForwardModel.h5'
+monitor_path = LOG_NAME_READ + '/monitor/'+ str(RESTART_EP)
 params_json = LOG_NAME_READ + '/param/dqn_ep' + str(RESTART_EP) + '.json'
 
 PRETRAINED = True
