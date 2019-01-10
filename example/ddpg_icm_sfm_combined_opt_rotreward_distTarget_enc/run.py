@@ -3,8 +3,8 @@ import gym_unrealcv
 from distutils.dir_util import copy_tree
 import os
 import json
-from constants import *
-# from constants_pred import *
+# from constants import *
+from constants_pred import *
 from ddpg import DDPG, DDPG_icm
 from gym import wrappers
 import time
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         reward_i_hist = []
         reward_dist_hist = []
         # reward_distTarget_hist = []
-        epoch_hist = []
+        # epoch_hist = []
 
         for epoch in range(current_epoch + 1, MAX_EPOCHS + 1, 1):
             obs = env.reset()
@@ -174,10 +174,11 @@ if __name__ == '__main__':
 
                     # reward_total = 1.5*reward_i + -0.3*R_distTarget + 2.0*reward
                     reward_i = 0.01 * reward_i
-                    reward = 0.1 * reward
+                    # reward = 0.1 * reward
+                    reward = 0.05 * reward
                     print('reward_dist, reward_i: , reward_distTarget, l_i', reward, reward_i, R_distTarget, l_i)
-                    # reward_total = reward_i + reward
-                    reward_total = reward_i
+                    reward_total = reward_i + reward
+                    # reward_total = reward_i
                     # Agent.addMemory(observation, action, reward, newObservation, done)
                     Agent.addMemory(observation, action, reward_total, newObservation, done)
                     observation = newObservation
@@ -209,7 +210,7 @@ if __name__ == '__main__':
                     #     action_batch_norm[0][i] = min(1,action_batch_norm[0][i])
                     # action = action_batch_norm[0]
 
-                    filename = '/ob%d'%t
+                    filename = '/ob%03d'%t
                     filename = IMAGE_PATH+filename + '.png'
 
                     cv2.imwrite(filename,obs_new)
@@ -219,12 +220,13 @@ if __name__ == '__main__':
 
 
                     action_env = action * (ACTION_HIGH - ACTION_LOW) + ACTION_LOW
+                    # action_env = np.array([  89.99388456,40.99991417,-199.78182749])
                     print('action env: ', action_env)
                     print('action high: ', ACTION_HIGH)
                     print('action low: ', ACTION_LOW)
                     print('shape , ', action_env.shape)
                     pose_new = pose_prev + action_env
-                    R_distTarget = pose_new[2]/2000
+                    # R_distTarget = pose_new[2]/2000
                     # if pose_new[2] > 2000:
                     #     pose_new[2] = 2000
                     # if (pose_new[1] > 65):
@@ -271,7 +273,7 @@ if __name__ == '__main__':
                 # cumulated_reward += reward
                 # cumulated_reward +=/ reward_total
                 cumulated_reward_i += reward_i
-                # cumulated_reward_dist += reward
+                cumulated_reward_dist += reward
                 # cumulated_reward_distTarget += -R_distTarget
 
 
@@ -304,16 +306,16 @@ if __name__ == '__main__':
 #                    if TRAIN is True:
                         # reward_tot_hist.append(cumulated_reward)
                         reward_i_hist.append(cumulated_reward_i)
-                        # reward_dist_hist.append(cumulated_reward_dist)
+                        reward_dist_hist.append(cumulated_reward_dist)
                         # reward_distTarget_hist.append(cumulated_reward_distTarget)
-                        epoch_hist.append(epoch)
+                        # epoch_hist.append(epoch)
 
                         # plt.plot(epoch_hist,reward_tot_hist)
                         # plt.savefig('totalreward.png')
                         # plt.clf()
 
-                        reward_keys =['rewards_i']
-                        reward_values = [reward_i_hist]
+                        reward_keys =['rewards_i', 'reward_dist']
+                        reward_values = [reward_i_hist, reward_dist_hist]
                         reward_dictionary = dict(zip(reward_keys, reward_values))
                         with open(PARAM_DIR + '/'+'rewards.json','w') as outfile:
                             json.dump(reward_dictionary, outfile)
