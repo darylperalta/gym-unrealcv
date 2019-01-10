@@ -471,6 +471,21 @@ register(
 )
 
 register(
+    id='curiosityChangePosDiscrete-v0',
+    entry_point='gym_unrealcv.envs:sfmRelative',
+    kwargs = {'setting_file' : 'curiosity_changePos_discrete.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
     id='house2-v0',
     entry_point='gym_unrealcv.envs:sfmRelative',
     kwargs = {'setting_file' : 'sfmRelative2.json',
