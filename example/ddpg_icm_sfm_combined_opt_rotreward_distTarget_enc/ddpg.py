@@ -6,11 +6,6 @@ from ActorNetwork import ActorNetwork
 from CriticNetwork import CriticNetwork
 from constants import *
 import keras.backend as K
-import numpy as np
-import tensorflow as tf
-from ActorNetwork import ActorNetwork
-from CriticNetwork import CriticNetwork
-from constants import *
 from example.utils import memory
 
 # from icm_model import forward_dynamics

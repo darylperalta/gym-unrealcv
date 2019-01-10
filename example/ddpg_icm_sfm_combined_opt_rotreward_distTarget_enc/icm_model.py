@@ -6,7 +6,7 @@ from keras.models import model_from_json, load_model
 #from keras.engine.training import collect_trainable_weights
 from keras.models import Sequential
 from keras.layers import Dense, Flatten, Input, merge, Activation,Convolution2D, MaxPooling2D, Lambda
-from keras.layers import Conv2D, Concatenate, BatchNormalization, LeakyReLU
+from keras.layers import Conv2D, Concatenate, BatchNormalization, LeakyReLU,  LSTM, Reshape
 from keras.models import Sequential, Model
 from keras.optimizers import Adam, RMSprop
 from keras.layers.advanced_activations import ELU
@@ -146,7 +146,7 @@ class icm_class(object):
 
 
 
-    def create_forward_model(self, action_size, enc_shape, output_dim = 288):
+    def create_forward_model(self, action_size, enc_shape, output_dim = 288, use_lstm = True):
         # phi_t, a_t -> phi_t+1
 
         action_shape = (action_size,)
@@ -158,7 +158,14 @@ class icm_class(object):
         x = Dense(256, activation='relu')(x)
         # x = Dense(128, activation='relu')(x)        #added after seeing view prediction bad
         x = Dense(256, activation='relu')(x)
-        x = Dense(256, activation='relu')(x)
+
+        if use_lstm:
+            x = Reshape((1,-1))(x)
+            x = LSTM(256, activation='relu')(x)
+        else:
+            x = Dense(256, activation='relu')(x)
+
+
         out = Dense(output_dim, activation='linear')(x)
 
         model = Model([phi_t,a_t],out,name='forward_model')
