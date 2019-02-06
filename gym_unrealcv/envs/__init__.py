@@ -6,3 +6,4 @@ from gym_unrealcv.envs.unrealcv_tracking import UnrealCvTracking_base
 from gym_unrealcv.envs.unrealcv_sfm import UnrealCvSimple
 from gym_unrealcv.envs.unrealcv_sfm import sfmRelative
 from gym_unrealcv.envs.unrealcv_house_target import sfmHouseTarget
+from gym_unrealcv.envs.unrealcv_depth import depthFusion
