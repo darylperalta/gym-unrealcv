@@ -10,7 +10,7 @@ from gym_unrealcv.envs.navigation.interaction import Navigation
 import random
 from math import sin, cos, radians
 
-from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion
+from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin
 # import run_docker # a lib for run env in a docker container
 # import gym_unrealcv.envs.utils.run_docker
 
@@ -67,12 +67,17 @@ class depthFusion(gym.Env):
          self.action_space = spaces.Box(low = np.array(self.continous_actions['low']),high = np.array(self.continous_actions['high']))
 
      self.startpose = self.unrealcv.get_pose(self.cam_id)
-     print('start_pose: ', self.startpose)
+
      #try hardcode start pose
      # self.startpose = [750.0, 295.0, 212.3,356.5,190.273, 0.0]
      # self.startpose = [0.0, 707.1068, 707.1067,0.0,270.0, -45.0] # [0,45,1000]
      # self.startpose = [0.0,99.6,8.72,0.0,270.0,-5.0] #[for depth fusion] [0,5,100]
-     self.startpose = [0.0,70.7,70.7,0.0,270.0,-45.0]
+     # self.startpose = [0.0,70.7,70.7,0.0,270.0,-45.0]
+     azimuth, elevation, distance = self.start_pose_rel
+     self.startpose = poseRelToAbs(azimuth, elevation, distance)
+     print('start_pose: ', self.startpose)
+     ''' create base frame '''
+     poseOrigin(self.log_dir+'frame-{:06}.pose.txt'.format(1000))
      # ACTION: (Azimuth, Elevation, Distance)
 
 
@@ -123,7 +128,8 @@ class depthFusion(gym.Env):
         return state, reward, done, {}
 
     # reset the environment
-    def _reset(self, ):
+    def _reset(self, start_pose_rel = None):
+
        x,y,z,_, yaw, _ = self.startpose
        # pose = self.startpose
 
@@ -157,6 +163,16 @@ class depthFusion(gym.Env):
            self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
        state = self.unrealcv.read_image(self.cam_id, 'lit')
        self.count_steps = 0
+       depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
+       pose = self.unrealcv.get_pose(self.cam_id,'soft')
+       depth = depth_conversion(depth_pt, 320)
+       pose_filename = self.log_dir+'frame-{:06}.pose.txt'.format(self.count_steps)
+       depth_filename = self.log_dir+'frame-{:06}.depth.npy'.format(self.count_steps)
+       write_pose(pose, pose_filename)
+       np.save(depth_filename, depth)
+
+       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1)
+
        return  state
 
     # close docker while closing openai gym
@@ -181,7 +197,7 @@ class depthFusion(gym.Env):
             #     reward = 10
             #     done = True
             #     print ('Get Target Place!')
-       depth_fusion(self.log_dir,num_frames = self.count_steps)
+       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1)
 
        return reward, done
 
@@ -209,7 +225,7 @@ class depthFusion(gym.Env):
        self.trigger_th = setting['trigger_th']
        self.height = setting['height']
        self.pitch = setting['pitch']
-
+       self.start_pose_rel = setting['start_pose_rel']
        self.discrete_actions = setting['discrete_actions']
        self.continous_actions = setting['continous_actions']
        self.env_bin = setting['env_bin']

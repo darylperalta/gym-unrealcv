@@ -35,26 +35,37 @@ if __name__ == '__main__':
     reward = 0
     done = False
 
-    num_views = 18
-    ob = env.reset()
+    num_views = 2
+    num_first_elev = 8
+    # num_views = 4
+
     distance = 100
     init_pose = np.array([0.0, 45.0, 100.0])
+    ob = env.reset()
+    # init_pose = np.array([0.0, 45.0, 50.0])
     action = init_pose
     for i in range(num_views):
+
         filename = 'ob%d'%i
         filename = filename + '.png'
         # ob, reward, done, _ = env.step(action)
 
         cv2.imwrite(filename,ob)
 
-        action[0] = action[0]+20
+        action[0] = action[0]+45
+        # action[0] = action[0]+90
+
+
         # print(action)
         # print(type(action))
         # ob, reward, done, _ = env.step(action)
+        if i == (num_first_elev-1):
+            action[1] = action[1]-25
         ob, reward, done, _ = env.step(action)
         # print('ob shape: ', ob.shape)
         print('reward: ', reward)
         print('done:', done)
+
 
         # action = agent.act(ob,reward,done)
         #action = [57.0, 30.0, 1484.0]

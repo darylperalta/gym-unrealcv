@@ -7,6 +7,7 @@ import math
 import pycuda.driver as cuda
 import pycuda.autoinit
 from pycuda.compiler import SourceModule
+from math import sin, cos, radians
 # def write_pose(x, y, z, roll, pitch, yaw, num=2, filename='pose.txt'):
 #
 #     f = open(filename, 'w+')
@@ -16,6 +17,28 @@ from pycuda.compiler import SourceModule
 #         f.write('%6.4f %6.4f %6.4f\n' % (roll[i], pitch[i], yaw[i]))
 #
 #     f.close()
+
+def poseOrigin(pose_filename):
+
+    # pose = [0.0,0.0,0.0,180.0,0.0,-90.0]
+    # pose = [0.0,0.0,0.0,-90.0,0.0,180.0]
+    pose = [0.0,0.0,0.0,0.0,-90.0,180.0]
+    write_pose(pose, pose_filename)
+
+    return pose
+
+
+def poseRelToAbs(azimuth, elevation,distance):
+
+    p = 90
+    yaw_exp = 270 - azimuth
+    pitch = -1 * elevation
+    y = distance*sin(radians(p-elevation))*cos(radians(azimuth))
+    x = distance*sin(radians(p-elevation))*sin(radians(azimuth))
+    z = distance*cos(radians(p-elevation))
+    # rotation = [0, yaw_exp, pitch]
+    pose = [x, y, z, 0, yaw_exp,pitch]
+    return pose
 
 def write_pose(pose, filename='pose.txt'):
 
@@ -242,7 +265,7 @@ end_header
                 #f.write(pt_base_z)
 
 
-def depth_fusion(data_path = 'log', cam_K_file = 'log/camera-intrinsics.txt', output_pts = 'log/tsdf_house.ply', first_frame_idx =1,base_frame_idx=1,num_frames=2,npy=True):
+def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output_pts = 'log/tsdf_house.ply', first_frame_idx =1,base_frame_idx=1,num_frames=2,npy=True, max_depth = 3.0):
 
     im_width = 640
     im_height = 480
@@ -348,8 +371,8 @@ def depth_fusion(data_path = 'log', cam_K_file = 'log/camera-intrinsics.txt', ou
         print('max and min depth', np.max(depth_im), np.min(depth_im))
         # depth_norm = depth_im/1000.0
         depth_norm = depth_im/1.0
-        mask_depth = depth_norm>4.0
-        depth_norm[mask_depth]= 4.0
+        mask_depth = depth_norm > max_depth
+        depth_norm[mask_depth] = max_depth
         depth_norm_flat = depth_norm.flatten().astype(np.float32)
         #print(type(depth_im))
         #print(depth_norm_flat.dtype)
