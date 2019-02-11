@@ -210,7 +210,7 @@ def LoadMatrixFromFile(filename,M=3,N=3):
     return tmp
 
 def SaveVoxelGrid2SurfacePointCloud(filename,voxel_grid_dim_x,voxel_grid_dim_y,voxel_grid_dim_z, voxel_size,voxel_grid_origin_x, voxel_grid_origin_y, voxel_grid_origin_z,
-    voxel_grid_TSDF,voxel_grid_weight,tsdf_thresh,weight_thresh):
+    voxel_grid_TSDF,voxel_grid_weight,tsdf_thresh, weight_thresh, save_pcd = False):
 
     '''count total number of points in point cloud'''
 
@@ -259,13 +259,14 @@ end_header
 
         #coordinates = np.zeros((num_pts,3),dtype='float32')
         coordinates = np.hstack((pt_base_x,pt_base_y,pt_base_z))
-        np.savetxt(f, coordinates, fmt='%f %f %f ')
+        if save_pcd == True:
+            np.savetxt(f, coordinates, fmt='%f %f %f ')
                 #f.write(pt_base_x)
                 #f.write(pt_base_y)
                 #f.write(pt_base_z)
 
 
-def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output_pts = 'log/tsdf_house.ply', first_frame_idx =1,base_frame_idx=1,num_frames=2,npy=True, max_depth = 3.0):
+def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output_pts = 'log/tsdf_house.ply', first_frame_idx =1,base_frame_idx=1,num_frames=2,npy=True, max_depth = 3.0, save_pcd =False):
 
     im_width = 640
     im_height = 480
@@ -274,6 +275,12 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     voxel_grid_origin_y = -1.5
     voxel_grid_origin_z = -0.5
     voxel_size = 0.006
+
+    voxel_grid_origin_x = -0.5
+    voxel_grid_origin_y = -0.5
+    voxel_grid_origin_z = -0.5
+    # voxel_size = 0.005
+    voxel_size = 0.010
     # voxel_size = 0.03
     # voxel_size = 0.12
 
@@ -281,9 +288,15 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     # voxel_grid_dim_x = 500
     # voxel_grid_dim_y = 500
     # voxel_grid_dim_z = 500
-    voxel_grid_dim_x = 600
-    voxel_grid_dim_y = 600
-    voxel_grid_dim_z = 600
+    # voxel_grid_dim_x = 600
+    # voxel_grid_dim_y = 600
+    # voxel_grid_dim_z = 600
+    # voxel_grid_dim_x = 200
+    # voxel_grid_dim_y = 200
+    # voxel_grid_dim_z = 200
+    voxel_grid_dim_x = 100
+    voxel_grid_dim_y = 100
+    voxel_grid_dim_z = 100
 
 
     # voxel_size = 0.006
@@ -294,25 +307,25 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
 
     '''read camera intrinsics'''
     cam_K = LoadMatrixFromFile(cam_K_file,3,3)
-    print('camk')
-    print(cam_K)
+    # print('camk')
+    # print(cam_K)
     #cam_K_np = np.array(cam_K).reshape(3,3)
     cam_K_np = np.array(cam_K,dtype='float32')
     #cam_K_np.reshape(3,3)
-    print(cam_K_np)
+    # print(cam_K_np)
 
     '''read base frame camera pose'''
     base2world_file = data_path+'/frame-'+'{:06}'.format(base_frame_idx)+'.pose.txt'
     base2world = LoadMatrixFromFile(base2world_file)
     base2world_np = np.array(base2world,dtype='float32').reshape(4,4)
-    print(base2world_np)
-    print(base2world_np.dtype)
-    print("asdfasfd")
+    # print(base2world_np)
+    # print(base2world_np.dtype)
+    # print("asdfasfd")
 
     '''invert base frame camera pose to get world-to-base frame transform'''
     base2world_inv = np.linalg.inv(base2world_np)
-    print('inverse')
-    print(base2world_inv)
+    # print('inverse')
+    # print(base2world_inv)
 
     '''flatten again the camera poses'''
     base2world_np_flat = base2world_np.flatten()
@@ -323,13 +336,13 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     voxel_grid_weight = np.zeros((voxel_grid_dim_x*voxel_grid_dim_y*voxel_grid_dim_z),dtype='float32')
 
 
-    print('voxel_grid_TSDF')
-    print(voxel_grid_TSDF)
-    print(voxel_grid_TSDF.shape)
+    # print('voxel_grid_TSDF')
+    # print(voxel_grid_TSDF)
+    # print(voxel_grid_TSDF.shape)
 
-    print('voxel_grid_TSDF')
-    print(voxel_grid_weight)
-    print(voxel_grid_weight.shape)
+    # print('voxel_grid_TSDF')
+    # print(voxel_grid_weight)
+    # print(voxel_grid_weight.shape)
 
     '''Load variables to GPU memory'''
     gpu_voxel_grid_TSDF = cuda.mem_alloc(voxel_grid_TSDF.nbytes)
@@ -355,7 +368,7 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
 
         curr_frame_prefix = '{:06}'.format(frame_idx)
         #print(curr_frame_prefix)
-        print('current frame prefix', curr_frame_prefix)
+        # print('current frame prefix', curr_frame_prefix)
         '''read current frame depth'''
 
         # color_im_file = data_path + '/frame-' + curr_frame_prefix + '.color.png'
@@ -363,42 +376,27 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
         if npy:
             depth_im_file = data_path +'/frame-' + curr_frame_prefix + '.depth.npy'
             depth_im = np.load(depth_im_file)
-            print(depth_im_file)
+            # print(depth_im_file)
         else:
             depth_im_file = data_path +'/frame-' + curr_frame_prefix + '.depth.png'
             depth_im = cv2.imread(depth_im_file,cv2.IMREAD_UNCHANGED)
         # print('max and min depth', np.max(depth_im))
-        print('max and min depth', np.max(depth_im), np.min(depth_im))
+        # print('max and min depth', np.max(depth_im), np.min(depth_im))
         # depth_norm = depth_im/1000.0
         depth_norm = depth_im/1.0
         mask_depth = depth_norm > max_depth
         depth_norm[mask_depth] = max_depth
         depth_norm_flat = depth_norm.flatten().astype(np.float32)
-        #print(type(depth_im))
-        #print(depth_norm_flat.dtype)
-        #print(depth_norm_flat[0:10])
-        # color_im = cv2.imread(color_im_file)
 
-        # print('type', color_im.dtype, color_im.shape)
-        # print('max and min color', np.max(color_im), np.min(depth_im))
-
-
-        # color_b = color_im[0].flatten()
-        # color_g = color_im[1].flatten()
-        # color_r = color_im[2].flatten()
-        # del(color_im)
-
-
-        #print(depth_im_file)
 
         ''' read base frame camera pose '''
         cam2world_file = data_path+'/frame-' + curr_frame_prefix + '.pose.txt'
         cam2world = LoadMatrixFromFile(cam2world_file)
         cam2world_np = np.array(cam2world, dtype='float32').reshape(4,4)
-        print('cam2world', cam2world_np)
+        # print('cam2world', cam2world_np)
         '''Compute relative camera pose (camera-to-base frame)'''
         cam2base = np.dot(base2world_inv,cam2world_np)
-        print('cam2base', cam2base)
+        # print('cam2base', cam2base)
         cam2base_flat = cam2base.flatten()
         cuda.memcpy_htod(gpu_cam2base,cam2base_flat)
         cuda.memcpy_htod(gpu_depth_im,depth_norm_flat)
@@ -432,4 +430,4 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     output_pts = data_path + '/house-' + '{:06}'.format(num_frames) + '.ply'
     SaveVoxelGrid2SurfacePointCloud(output_pts, voxel_grid_dim_x, voxel_grid_dim_y, voxel_grid_dim_z,
                                   voxel_size, voxel_grid_origin_x, voxel_grid_origin_y, voxel_grid_origin_z,
-                                  voxel_grid_TSDF, voxel_grid_weight, 0.2, 0.0);
+                                  voxel_grid_TSDF, voxel_grid_weight, 0.2, 0.0, save_pcd = save_pcd);
