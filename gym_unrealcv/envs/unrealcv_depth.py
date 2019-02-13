@@ -11,9 +11,40 @@ import random
 from math import sin, cos, radians
 
 from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin
+import time
+import pcl
 # import run_docker # a lib for run env in a docker container
 # import gym_unrealcv.envs.utils.run_docker
 
+import tensorflow as tf
+from tensorflow.python.framework import ops
+
+nn_distance_module=tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
+
+def nn_distance(xyz1,xyz2):
+    '''
+Computes the distance of nearest neighbors for a pair of point clouds
+input: xyz1: (batch_size,#points_1,3)  the first point cloud
+input: xyz2: (batch_size,#points_2,3)  the second point cloud
+output: dist1: (batch_size,#point_1)   distance from first to second
+output: idx1:  (batch_size,#point_1)   nearest neighbor from first to second
+output: dist2: (batch_size,#point_2)   distance from second to first
+output: idx2:  (batch_size,#point_2)   nearest neighbor from second to first
+    '''
+    return nn_distance_module.nn_distance(xyz1,xyz2)
+#@tf.RegisterShape('NnDistance')
+#def _nn_distance_shape(op):
+ #shape1=op.inputs[0].get_shape().with_rank(3)
+ #shape2=op.inputs[1].get_shape().with_rank(3)
+ #return [tf.TensorShape([shape1.dims[0],shape1.dims[1]]),tf.TensorShape([shape1.dims[0],shape1.dims[1]]),
+     #tf.TensorShape([shape2.dims[0],shape2.dims[1]]),tf.TensorShape([shape2.dims[0],shape2.dims[1]])]
+@ops.RegisterGradient('NnDistance')
+def _nn_distance_grad(op,grad_dist1,grad_idx1,grad_dist2,grad_idx2):
+    xyz1=op.inputs[0]
+    xyz2=op.inputs[1]
+    idx1=op.outputs[1]
+    idx2=op.outputs[3]
+    return nn_distance_module.nn_distance_grad(xyz1,xyz2,grad_dist1,idx1,grad_dist2,idx2)
 
 class depthFusion(gym.Env):
     # init the Unreal Gym Environment
@@ -35,6 +66,9 @@ class depthFusion(gym.Env):
      # self.reset_type = 'random'
      self.reset_type = 'test'
      self.log_dir = log_dir
+     gt_pcl = pcl.load('house-000024-gt.ply')
+     self.gt_pcl = np.asarray(gt_pcl)
+     self.gt_pcl = np.expand_dims(self.gt_pcl,axis=0)
      # run virtual enrionment in docker container
      # self.docker = run_docker.RunDocker()
      # env_ip, env_dir = self.docker.start(ENV_NAME=ENV_NAME)
@@ -74,8 +108,9 @@ class depthFusion(gym.Env):
      # self.startpose = [0.0,99.6,8.72,0.0,270.0,-5.0] #[for depth fusion] [0,5,100]
      # self.startpose = [0.0,70.7,70.7,0.0,270.0,-45.0]
      azimuth, elevation, distance = self.start_pose_rel
+     # print('start pose rel', azimuth,elevation,distance)
      self.startpose = poseRelToAbs(azimuth, elevation, distance)
-     print('start_pose: ', self.startpose)
+     # print('start_pose: ', self.startpose)
      ''' create base frame '''
      poseOrigin(self.log_dir+'frame-{:06}.pose.txt'.format(1000))
      # ACTION: (Azimuth, Elevation, Distance)
@@ -110,6 +145,7 @@ class depthFusion(gym.Env):
 
 
         state = self.unrealcv.read_image(self.cam_id, 'lit')
+        # print('state shape', state.shape)
         depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
         pose = self.unrealcv.get_pose(self.cam_id,'soft')
         depth = depth_conversion(depth_pt, 320)
@@ -131,13 +167,6 @@ class depthFusion(gym.Env):
     def _reset(self, start_pose_rel = None):
 
        x,y,z,_, yaw, _ = self.startpose
-       # pose = self.startpose
-
-       # self.unrealcv.set_position(self.cam_id, x, y, z)
-       # self.unrealcv.set_rotation(self.cam_id, 0, yaw, 0)
-
-
-
 
        if self.reset_type == 'random':
            distance = 1000
@@ -171,7 +200,14 @@ class depthFusion(gym.Env):
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1)
+       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =True)
+       out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
+       out_pcl = pcl.load(out_fn)
+       out_pcl_np = np.asarray(out_pcl)
+       out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
+       self.cd_old = self.compute_chamfer(out_pcl_np)
+       # print('cd ', self.cd_old)
+
 
        return  state
 
@@ -181,23 +217,50 @@ class depthFusion(gym.Env):
 
     # calcuate reward according to your task
     def reward(self,collision, move_dist):
-       done = False
-       reward = - 0.01
 
-       if collision:
-            done = True
-            reward = -1
-            print('Collision Detected!!')
-       else:
-            #hard code to 1
-            reward = -1*move_dist*(1/2000)
+
+       done = False
+       reward = - 1.0
+
+       # if collision:
+       #      done = True
+       #      reward = -1
+       #      print('Collision Detected!!')
+       # else:
+       #      #hard code to 1
+       #      reward = -1*move_dist*(1/2000)
             # print('dist reward: ', reward)
             # distance = self.cauculate_distance(self.target_pos, self.unrealcv.get_pose())
             # if distance < 50:
             #     reward = 10
             #     done = True
             #     print ('Get Target Place!')
-       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1)
+       # print("start depth                                ")
+       # print("!!!!!!!!!!!!")
+       # print('numframes:', self.count_steps+1)
+       depth_start = time.time()
+
+       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =True)
+       out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
+       out_pcl = pcl.load(out_fn)
+       out_pcl_np = np.asarray(out_pcl)
+       out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
+       cd = self.compute_chamfer(out_pcl_np)
+       cd_delta = self.cd_old - cd
+       print('chamfer: ', cd)
+       # print('chamfer del: ', cd_delta)
+       depth_end = time.time()
+
+
+       # print("Depth Fusion time: ", depth_end - depth_start)
+
+       if cd < 1.1:
+           done = True
+           reward = 50
+       else:
+           reward = cd_delta
+
+       self.cd_old = cd
 
        return reward, done
 
@@ -238,3 +301,13 @@ class depthFusion(gym.Env):
        import gym_unrealcv
        gympath = os.path.dirname(gym_unrealcv.__file__)
        return os.path.join(gympath, 'envs/setting', filename)
+
+    def compute_chamfer(self, output):
+       with tf.Session('') as sess:
+           inp_placeholder = tf.placeholder(tf.float32)
+           reta,retb,retc,retd=nn_distance(inp_placeholder,self.gt_pcl)
+           loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
+           sess.run(tf.global_variables_initializer())
+           loss_out = sess.run(loss,feed_dict={inp_placeholder: output})
+
+           return(loss_out)

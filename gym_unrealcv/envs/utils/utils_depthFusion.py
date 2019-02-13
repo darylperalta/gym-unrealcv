@@ -4,9 +4,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import math
-import pycuda.driver as cuda
-import pycuda.autoinit
-from pycuda.compiler import SourceModule
+
 from math import sin, cos, radians
 # def write_pose(x, y, z, roll, pitch, yaw, num=2, filename='pose.txt'):
 #
@@ -43,7 +41,7 @@ def poseRelToAbs(azimuth, elevation,distance):
 def write_pose(pose, filename='pose.txt'):
 
     x, y, z, pitch, yaw, roll = pose
-    print('pose.... ', pose)
+    # print('pose.... ', pose)
     rot_mat = eulerAnglesToRotationMatrix([math.radians(pitch),math.radians(yaw),math.radians(roll)]) # worked on pure elevation trans3
     # rot_mat = eulerAnglesToRotationMatrix([math.radians(roll),math.radians(yaw),math.radians(pitch)])
     # rot_mat = eulerAnglesToRotationMatrix([math.radians(roll),math.radians(pitch),math.radians(yaw)])
@@ -91,7 +89,7 @@ def write_depth(depth_np_filename, depth):
 
 
 def eulerAnglesToRotationMatrix(theta):
-    print('theta 0 ', theta[0], theta[1], theta[2])
+    # print('theta 0 ', theta[0], theta[1], theta[2])
 
     R_x = np.array([[1.,         0.,                  0.                   ],
                     [0.,         math.cos(theta[0]), -1*math.sin(theta[0]) ],
@@ -128,61 +126,6 @@ def depth_conversion(PointDepth, f):
     return PlaneDepth
 
 
-
-mod = SourceModule("""
-    __global__ void Integrate(float * cam_K, float * cam2base, float * depth_im,
-                   int im_height, int im_width, int voxel_grid_dim_x, int voxel_grid_dim_y, int voxel_grid_dim_z,
-                   float voxel_grid_origin_x, float voxel_grid_origin_y, float voxel_grid_origin_z, float voxel_size, float trunc_margin,
-                   float * voxel_grid_TSDF, float * voxel_grid_weight) {
-
-      int pt_grid_z = blockIdx.x;
-      int pt_grid_y = threadIdx.x;
-
-      for (int pt_grid_x = 0; pt_grid_x < voxel_grid_dim_x; ++pt_grid_x) {
-
-        // Convert voxel center from grid coordinates to base frame camera coordinates
-        float pt_base_x = voxel_grid_origin_x + pt_grid_x * voxel_size;
-        float pt_base_y = voxel_grid_origin_y + pt_grid_y * voxel_size;
-        float pt_base_z = voxel_grid_origin_z + pt_grid_z * voxel_size;
-
-        // Convert from base frame camera coordinates to current frame camera coordinates
-        float tmp_pt[3] = {0};
-        tmp_pt[0] = pt_base_x - cam2base[0 * 4 + 3];
-        tmp_pt[1] = pt_base_y - cam2base[1 * 4 + 3];
-        tmp_pt[2] = pt_base_z - cam2base[2 * 4 + 3];
-        float pt_cam_x = cam2base[0 * 4 + 0] * tmp_pt[0] + cam2base[1 * 4 + 0] * tmp_pt[1] + cam2base[2 * 4 + 0] * tmp_pt[2];
-        float pt_cam_y = cam2base[0 * 4 + 1] * tmp_pt[0] + cam2base[1 * 4 + 1] * tmp_pt[1] + cam2base[2 * 4 + 1] * tmp_pt[2];
-        float pt_cam_z = cam2base[0 * 4 + 2] * tmp_pt[0] + cam2base[1 * 4 + 2] * tmp_pt[1] + cam2base[2 * 4 + 2] * tmp_pt[2];
-
-        if (pt_cam_z <= 0)
-          continue;
-
-        int pt_pix_x = roundf(cam_K[0 * 3 + 0] * (pt_cam_x / pt_cam_z) + cam_K[0 * 3 + 2]);
-        int pt_pix_y = roundf(cam_K[1 * 3 + 1] * (pt_cam_y / pt_cam_z) + cam_K[1 * 3 + 2]);
-        if (pt_pix_x < 0 || pt_pix_x >= im_width || pt_pix_y < 0 || pt_pix_y >= im_height)
-          continue;
-
-        float depth_val = depth_im[pt_pix_y * im_width + pt_pix_x];
-
-        if (depth_val <= 0 || depth_val > 6)
-          continue;
-
-        float diff = depth_val - pt_cam_z;
-
-        if (diff <= -trunc_margin)
-          continue;
-
-        // Integrate
-        int volume_idx = pt_grid_z * voxel_grid_dim_y * voxel_grid_dim_x + pt_grid_y * voxel_grid_dim_x + pt_grid_x;
-        float dist = fmin(1.0f, diff / trunc_margin);
-        float weight_old = voxel_grid_weight[volume_idx];
-        float weight_new = weight_old + 1.0f;
-        voxel_grid_weight[volume_idx] = weight_new;
-        voxel_grid_TSDF[volume_idx] = (voxel_grid_TSDF[volume_idx] * weight_old + dist) / weight_new;
-      }
-    }
-
-    """)
 
 
 def LoadMatrixFromFile(filename,M=3,N=3):
@@ -267,6 +210,68 @@ end_header
 
 
 def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output_pts = 'log/tsdf_house.ply', first_frame_idx =1,base_frame_idx=1,num_frames=2,npy=True, max_depth = 3.0, save_pcd =False):
+    import pycuda.driver as cuda
+    import pycuda.autoinit
+    from pycuda.compiler import SourceModule
+    gpu_dev = cuda.Device(0)
+    # print('Max Threads Per Block', gpu_dev.MAX_THREADS_PER_BLOCK)
+
+
+
+    mod = SourceModule("""
+        __global__ void Integrate(float * cam_K, float * cam2base, float * depth_im,
+                       int im_height, int im_width, int voxel_grid_dim_x, int voxel_grid_dim_y, int voxel_grid_dim_z,
+                       float voxel_grid_origin_x, float voxel_grid_origin_y, float voxel_grid_origin_z, float voxel_size, float trunc_margin,
+                       float * voxel_grid_TSDF, float * voxel_grid_weight) {
+
+          int pt_grid_z = blockIdx.x;
+          int pt_grid_y = threadIdx.x;
+
+          for (int pt_grid_x = 0; pt_grid_x < voxel_grid_dim_x; ++pt_grid_x) {
+
+            // Convert voxel center from grid coordinates to base frame camera coordinates
+            float pt_base_x = voxel_grid_origin_x + pt_grid_x * voxel_size;
+            float pt_base_y = voxel_grid_origin_y + pt_grid_y * voxel_size;
+            float pt_base_z = voxel_grid_origin_z + pt_grid_z * voxel_size;
+
+            // Convert from base frame camera coordinates to current frame camera coordinates
+            float tmp_pt[3] = {0};
+            tmp_pt[0] = pt_base_x - cam2base[0 * 4 + 3];
+            tmp_pt[1] = pt_base_y - cam2base[1 * 4 + 3];
+            tmp_pt[2] = pt_base_z - cam2base[2 * 4 + 3];
+            float pt_cam_x = cam2base[0 * 4 + 0] * tmp_pt[0] + cam2base[1 * 4 + 0] * tmp_pt[1] + cam2base[2 * 4 + 0] * tmp_pt[2];
+            float pt_cam_y = cam2base[0 * 4 + 1] * tmp_pt[0] + cam2base[1 * 4 + 1] * tmp_pt[1] + cam2base[2 * 4 + 1] * tmp_pt[2];
+            float pt_cam_z = cam2base[0 * 4 + 2] * tmp_pt[0] + cam2base[1 * 4 + 2] * tmp_pt[1] + cam2base[2 * 4 + 2] * tmp_pt[2];
+
+            if (pt_cam_z <= 0)
+              continue;
+
+            int pt_pix_x = roundf(cam_K[0 * 3 + 0] * (pt_cam_x / pt_cam_z) + cam_K[0 * 3 + 2]);
+            int pt_pix_y = roundf(cam_K[1 * 3 + 1] * (pt_cam_y / pt_cam_z) + cam_K[1 * 3 + 2]);
+            if (pt_pix_x < 0 || pt_pix_x >= im_width || pt_pix_y < 0 || pt_pix_y >= im_height)
+              continue;
+
+            float depth_val = depth_im[pt_pix_y * im_width + pt_pix_x];
+
+            if (depth_val <= 0 || depth_val > 6)
+              continue;
+
+            float diff = depth_val - pt_cam_z;
+
+            if (diff <= -trunc_margin)
+              continue;
+
+            // Integrate
+            int volume_idx = pt_grid_z * voxel_grid_dim_y * voxel_grid_dim_x + pt_grid_y * voxel_grid_dim_x + pt_grid_x;
+            float dist = fmin(1.0f, diff / trunc_margin);
+            float weight_old = voxel_grid_weight[volume_idx];
+            float weight_new = weight_old + 1.0f;
+            voxel_grid_weight[volume_idx] = weight_new;
+            voxel_grid_TSDF[volume_idx] = (voxel_grid_TSDF[volume_idx] * weight_old + dist) / weight_new;
+          }
+        }
+
+        """)
 
     im_width = 640
     im_height = 480
@@ -367,7 +372,7 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     for frame_idx in range(first_frame_idx,first_frame_idx+num_frames):
 
         curr_frame_prefix = '{:06}'.format(frame_idx)
-        #print(curr_frame_prefix)
+        # print(curr_frame_prefix)
         # print('current frame prefix', curr_frame_prefix)
         '''read current frame depth'''
 
