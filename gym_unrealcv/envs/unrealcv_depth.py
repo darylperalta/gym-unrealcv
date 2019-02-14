@@ -18,33 +18,9 @@ import pcl
 
 import tensorflow as tf
 from tensorflow.python.framework import ops
+import keras.backend as K
 
-nn_distance_module=tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
 
-def nn_distance(xyz1,xyz2):
-    '''
-Computes the distance of nearest neighbors for a pair of point clouds
-input: xyz1: (batch_size,#points_1,3)  the first point cloud
-input: xyz2: (batch_size,#points_2,3)  the second point cloud
-output: dist1: (batch_size,#point_1)   distance from first to second
-output: idx1:  (batch_size,#point_1)   nearest neighbor from first to second
-output: dist2: (batch_size,#point_2)   distance from second to first
-output: idx2:  (batch_size,#point_2)   nearest neighbor from second to first
-    '''
-    return nn_distance_module.nn_distance(xyz1,xyz2)
-#@tf.RegisterShape('NnDistance')
-#def _nn_distance_shape(op):
- #shape1=op.inputs[0].get_shape().with_rank(3)
- #shape2=op.inputs[1].get_shape().with_rank(3)
- #return [tf.TensorShape([shape1.dims[0],shape1.dims[1]]),tf.TensorShape([shape1.dims[0],shape1.dims[1]]),
-     #tf.TensorShape([shape2.dims[0],shape2.dims[1]]),tf.TensorShape([shape2.dims[0],shape2.dims[1]])]
-@ops.RegisterGradient('NnDistance')
-def _nn_distance_grad(op,grad_dist1,grad_idx1,grad_dist2,grad_idx2):
-    xyz1=op.inputs[0]
-    xyz2=op.inputs[1]
-    idx1=op.outputs[1]
-    idx2=op.outputs[3]
-    return nn_distance_module.nn_distance_grad(xyz1,xyz2,grad_dist1,idx1,grad_dist2,idx2)
 
 class depthFusion(gym.Env):
     # init the Unreal Gym Environment
@@ -58,6 +34,7 @@ class depthFusion(gym.Env):
                 reward_type = 'bbox', # distance, bbox, bbox_distance,
                 docker = False,
                 # resolution = (84,84)
+                # resolution = (640,480),
                 resolution = (640,480),
                 log_dir='log/'
     ):
@@ -66,7 +43,8 @@ class depthFusion(gym.Env):
      # self.reset_type = 'random'
      self.reset_type = 'test'
      self.log_dir = log_dir
-     gt_pcl = pcl.load('house-000024-gt.ply')
+     # gt_pcl = pcl.load('house-000024-gt.ply')
+     gt_pcl = pcl.load('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
      self.gt_pcl = np.asarray(gt_pcl)
      self.gt_pcl = np.expand_dims(self.gt_pcl,axis=0)
      # run virtual enrionment in docker container
@@ -100,6 +78,10 @@ class depthFusion(gym.Env):
      elif self.action_type == 'continuous':
          self.action_space = spaces.Box(low = np.array(self.continous_actions['low']),high = np.array(self.continous_actions['high']))
 
+     self.observation_type = observation_type
+     assert self.observation_type == 'color' or self.observation_type == 'depth' or self.observation_type == 'rgbd' or self.observation_type == 'gray'
+     self.observation_shape = self.unrealcv.define_observation(self.cam_id,self.observation_type)
+
      self.startpose = self.unrealcv.get_pose(self.cam_id)
 
      #try hardcode start pose
@@ -128,9 +110,16 @@ class depthFusion(gym.Env):
      # self.max_steps = 35
      self.target_pos = ( -60,   0,   50)
      # self.action_space = gym.spaces.Discrete(len(self.ACTION_LIST))
-     state = self.unrealcv.read_image(self.cam_id, 'lit')
-     self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
+     # state = self.unrealcv.read_image(self.cam_id, 'lit')
+     # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
+     self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
+     # if K.backend() == 'tensorflow':
+     #     config = tf.ConfigProto()
+     #     config.gpu_options.allow_growth = True
+     #     self.sess = tf.Session(config=config)
+     #     K.set_session(self.sess)
+     # self.sess = K.get_session()
     # update the environment step by step
     def _step(self, action = 0):
         # (velocity, angle) = self.ACTION_LIST[action]
@@ -139,12 +128,18 @@ class depthFusion(gym.Env):
         # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
         # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
         azimuth, elevation, distance = action
+        # azimuth, elevation, distance = self.ACTION_LIST[action]
+        # azimuth, elevation, distance  = self.discrete_actions[action]
+        print('action ', action)
+        print('pose')
+        print(azimuth, elevation, distance )
         collision, move_dist = self.unrealcv.move_rel(self.cam_id, azimuth, elevation, distance)
 
         # print('distance:   ', move_dist)
 
 
-        state = self.unrealcv.read_image(self.cam_id, 'lit')
+        # state = self.unrealcv.read_image(self.cam_id, 'lit')
+        state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
         # print('state shape', state.shape)
         depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
         pose = self.unrealcv.get_pose(self.cam_id,'soft')
@@ -190,7 +185,8 @@ class depthFusion(gym.Env):
 
        else:
            self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
-       state = self.unrealcv.read_image(self.cam_id, 'lit')
+       # state = self.unrealcv.read_image(self.cam_id, 'lit')
+       state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
        self.count_steps = 0
        depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
        pose = self.unrealcv.get_pose(self.cam_id,'soft')
@@ -200,13 +196,13 @@ class depthFusion(gym.Env):
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =True)
-       out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
-       out_pcl = pcl.load(out_fn)
-       out_pcl_np = np.asarray(out_pcl)
+       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =False)
+       # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
+       # out_pcl = pcl.load(out_fn)
+       # out_pcl_np = np.asarray(out_pcl)
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        self.cd_old = self.compute_chamfer(out_pcl_np)
-       # print('cd ', self.cd_old)
+       # print('cd old ', self.cd_old)
 
 
        return  state
@@ -220,7 +216,7 @@ class depthFusion(gym.Env):
 
 
        done = False
-       reward = - 1.0
+       # reward = - 1.0
 
        # if collision:
        #      done = True
@@ -240,25 +236,27 @@ class depthFusion(gym.Env):
        # print('numframes:', self.count_steps+1)
        depth_start = time.time()
 
-       depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =True)
-       out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
-       out_pcl = pcl.load(out_fn)
-       out_pcl_np = np.asarray(out_pcl)
+       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd = False)
+       # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
+       # out_pcl = pcl.load(out_fn)
+       # out_pcl_np = np.asarray(out_pcl)
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        cd = self.compute_chamfer(out_pcl_np)
-       cd_delta = self.cd_old - cd
-       print('chamfer: ', cd)
-       # print('chamfer del: ', cd_delta)
+       cd_delta = cd - self.cd_old
+       # cd_delta = cd_delta
+       print('coverage: ', cd)
+       # print('cov del: ', cd_delta)
        depth_end = time.time()
 
 
        # print("Depth Fusion time: ", depth_end - depth_start)
 
-       if cd < 1.1:
-           done = True
+       if cd > 97.0:
+           # done = True
            reward = 50
+           print('covered', self.count_steps)
        else:
-           reward = cd_delta
+           reward = cd_delta*0.2
 
        self.cd_old = cd
 
@@ -303,11 +301,55 @@ class depthFusion(gym.Env):
        return os.path.join(gympath, 'envs/setting', filename)
 
     def compute_chamfer(self, output):
-       with tf.Session('') as sess:
-           inp_placeholder = tf.placeholder(tf.float32)
-           reta,retb,retc,retd=nn_distance(inp_placeholder,self.gt_pcl)
-           loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
-           sess.run(tf.global_variables_initializer())
-           loss_out = sess.run(loss,feed_dict={inp_placeholder: output})
+       # with tf.Session('') as sess:
+       # sess = K.get_session()
+       # self.sess.run(tf.global_variables_initializer())
+       # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
+       with tf.device('/cpu:0'):
+           sess = K.get_session()
+           with sess.as_default():
+           # with tf.Session('') as sess:
 
-           return(loss_out)
+               # inp_placeholder = tf.placeholder(tf.float32)
+               # reta,retb,retc,retd=self.nn_distance(inp_placeholder,self.gt_pcl)
+               # with tf.name_scope('chamfer'):
+               # reta,retb,retc,retd=self.nn_distance(output,self.gt_pcl)
+               _,_,retc,_=self.nn_distance(output,self.gt_pcl)
+               # loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
+               loss=tf.reduce_sum(retc)
+               dist_thresh = tf.greater(0.0008, retc)
+               dist_mean = tf.reduce_mean(tf.cast(dist_thresh, tf.float32))
+
+               # loss_out = tf.Tensor.eval(loss)
+               coverage = tf.Tensor.eval(dist_mean)
+               # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
+               return coverage*100
+
+    # def nn_distance_init(self, output):
+
+
+       #@tf.RegisterShape('NnDistance')
+       #def _nn_distance_shape(op):
+        #shape1=op.inputs[0].get_shape().with_rank(3)
+        #shape2=op.inputs[1].get_shape().with_rank(3)
+        #return [tf.TensorShape([shape1.dims[0],shape1.dims[1]]),tf.TensorShape([shape1.dims[0],shape1.dims[1]]),
+            #tf.TensorShape([shape2.dims[0],shape2.dims[1]]),tf.TensorShape([shape2.dims[0],shape2.dims[1]])]
+       # @ops.RegisterGradient('NnDistance')
+       # def _nn_distance_grad(op,grad_dist1,grad_idx1,grad_dist2,grad_idx2):
+       #     xyz1=op.inputs[0]
+       #     xyz2=op.inputs[1]
+       #     idx1=op.outputs[1]
+       #     idx2=op.outputs[3]
+       #     return nn_distance_module.nn_distance_grad(xyz1,xyz2,grad_dist1,idx1,grad_dist2,idx2)
+
+    def nn_distance(self,xyz1,xyz2):
+       '''
+     Computes the distance of nearest neighbors for a pair of point clouds
+     input: xyz1: (batch_size,#points_1,3)  the first point cloud
+     input: xyz2: (batch_size,#points_2,3)  the second point cloud
+     output: dist1: (batch_size,#point_1)   distance from first to second
+     output: idx1:  (batch_size,#point_1)   nearest neighbor from first to second
+     output: dist2: (batch_size,#point_2)   distance from second to first
+     output: idx2:  (batch_size,#point_2)   nearest neighbor from second to first
+       '''
+       return self.nn_distance_module.nn_distance(xyz1,xyz2)
