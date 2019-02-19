@@ -176,37 +176,40 @@ end_header
     '''
     mask = (abs(voxel_grid_TSDF)<tsdf_thresh) & (voxel_grid_weight>weight_thresh)
     num_pts = np.sum(mask)
-    print("SDFasdf NUMPTS DDFS     ")
-    print(num_pts)
-    with open(filename, 'wb') as f:
-        f.write((ply_header % dict(num_pts=num_pts)).encode('utf-8'))
+    # print("SDFasdf NUMPTS DDFS     ")
+    # print(num_pts)
+
         #np.savetxt(f, coordinate, fmt='%f %f %f ')
 
 
-        mask = (abs(voxel_grid_TSDF)<tsdf_thresh) & (voxel_grid_weight>weight_thresh)
-        num_pts = np.sum(mask)
+    mask = (abs(voxel_grid_TSDF)<tsdf_thresh) & (voxel_grid_weight>weight_thresh)
+    num_pts = np.sum(mask)
 
-        i = np.arange(voxel_grid_dim_x * voxel_grid_dim_y * voxel_grid_dim_z)
+    i = np.arange(voxel_grid_dim_x * voxel_grid_dim_y * voxel_grid_dim_z)
 
-        z = np.zeros((num_pts),dtype='int32')
-        y = np.zeros((num_pts),dtype='int32')
-        x = np.zeros((num_pts),dtype='int32')
+    z = np.zeros((num_pts),dtype='int32')
+    y = np.zeros((num_pts),dtype='int32')
+    x = np.zeros((num_pts),dtype='int32')
 
-        z = np.floor(i[mask]/(voxel_grid_dim_x*voxel_grid_dim_y))
-        y = np.floor((i[mask]-(z*voxel_grid_dim_z*voxel_grid_dim_y))/voxel_grid_dim_x)
-        x = np.int32(i[mask] -(z*voxel_grid_dim_x*voxel_grid_dim_y)-(y*voxel_grid_dim_x))
+    z = np.floor(i[mask]/(voxel_grid_dim_x*voxel_grid_dim_y))
+    y = np.floor((i[mask]-(z*voxel_grid_dim_z*voxel_grid_dim_y))/voxel_grid_dim_x)
+    x = np.int32(i[mask] -(z*voxel_grid_dim_x*voxel_grid_dim_y)-(y*voxel_grid_dim_x))
 
-        pt_base_x = np.float32(voxel_grid_origin_x + np.float32(x) * voxel_size).reshape(num_pts,1)
-        pt_base_y = np.float32(voxel_grid_origin_y + np.float32(y) * voxel_size).reshape(num_pts,1)
-        pt_base_z = np.float32(voxel_grid_origin_z + np.float32(z) * voxel_size).reshape(num_pts,1)
+    pt_base_x = np.float32(voxel_grid_origin_x + np.float32(x) * voxel_size).reshape(num_pts,1)
+    pt_base_y = np.float32(voxel_grid_origin_y + np.float32(y) * voxel_size).reshape(num_pts,1)
+    pt_base_z = np.float32(voxel_grid_origin_z + np.float32(z) * voxel_size).reshape(num_pts,1)
 
-        #coordinates = np.zeros((num_pts,3),dtype='float32')
-        coordinates = np.hstack((pt_base_x,pt_base_y,pt_base_z))
-        if save_pcd == True:
+    #coordinates = np.zeros((num_pts,3),dtype='float32')
+    coordinates = np.hstack((pt_base_x,pt_base_y,pt_base_z))
+    if save_pcd == True:
+        with open(filename, 'wb') as f:
+            f.write((ply_header % dict(num_pts=num_pts)).encode('utf-8'))
             np.savetxt(f, coordinates, fmt='%f %f %f ')
                 #f.write(pt_base_x)
                 #f.write(pt_base_y)
                 #f.write(pt_base_z)
+
+    return coordinates
 
 
 def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output_pts = 'log/tsdf_house.ply', first_frame_idx =1,base_frame_idx=1,num_frames=2,npy=True, max_depth = 3.0, save_pcd =False):
@@ -275,6 +278,10 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
 
     im_width = 640
     im_height = 480
+
+    # im_width = 160
+    # im_height = 120
+
 
     voxel_grid_origin_x = -1.5
     voxel_grid_origin_y = -1.5
@@ -368,7 +375,7 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     '''add CUDA error check'''
 
     '''Loop through each depth frame and integrate TSDF voxel grid'''
-    print('Loop through each depth frame and integrate TSDF voxel grid')
+    # print('Loop through each depth frame and integrate TSDF voxel grid')
     for frame_idx in range(first_frame_idx,first_frame_idx+num_frames):
 
         curr_frame_prefix = '{:06}'.format(frame_idx)
@@ -428,11 +435,11 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
     #mask2 =voxel_grid_TSDF)>tsdf_thresh
     #print(voxel_grid_TSDF[0:20])
     #print(np.sum(mask))
+    if save_pcd == True:
+        print("Saving surface point cloud (tsdf.ply)...")
+        output_pts = data_path + '/house-' + '{:06}'.format(num_frames) + '.ply'
 
-    print("Saving surface point cloud (tsdf.ply)...")
-
-
-    output_pts = data_path + '/house-' + '{:06}'.format(num_frames) + '.ply'
-    SaveVoxelGrid2SurfacePointCloud(output_pts, voxel_grid_dim_x, voxel_grid_dim_y, voxel_grid_dim_z,
+    out_pts = SaveVoxelGrid2SurfacePointCloud(output_pts, voxel_grid_dim_x, voxel_grid_dim_y, voxel_grid_dim_z,
                                   voxel_size, voxel_grid_origin_x, voxel_grid_origin_y, voxel_grid_origin_z,
                                   voxel_grid_TSDF, voxel_grid_weight, 0.2, 0.0, save_pcd = save_pcd);
+    return out_pts

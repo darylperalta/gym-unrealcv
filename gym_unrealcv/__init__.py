@@ -20,7 +20,20 @@ register(
     max_episode_steps = 1000000
 
 )
+register(
+    id='Search-RrDoorDiscreteGray-v0',
+    entry_point='gym_unrealcv.envs:UnrealCvSearch_base',
+    kwargs = {'setting_file' : 'search_rr_door41.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'gray',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
 
+)
 
 
 register(
@@ -553,6 +566,34 @@ register(
               'test': False,
               'action_type' : 'continuous',
               'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+register(
+    id='DepthFusionB-v0',
+    entry_point='gym_unrealcv.envs:depthFusion',
+    kwargs = {'setting_file' : 'depth_fusionB.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'color',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+register(
+    id='DepthFusionBGray-v0',
+    entry_point='gym_unrealcv.envs:depthFusion_keras',
+    kwargs = {'setting_file' : 'depth_fusionB_keras.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'gray',
               'reward_type': 'bbox',
               'docker': use_docker
               },

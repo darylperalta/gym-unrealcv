@@ -227,7 +227,7 @@ class depthFusion_keras(gym.Env):
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =False)
+       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =True)
        # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
        # out_pcl = pcl.load(out_fn)
        # out_pcl_np = np.asarray(out_pcl)
@@ -267,7 +267,7 @@ class depthFusion_keras(gym.Env):
        # print('numframes:', self.count_steps+1)
        depth_start = time.time()
 
-       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd = False)
+       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd = True)
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        cd = self.compute_chamfer(out_pcl_np)
        cd_delta = cd - self.cd_old
@@ -284,6 +284,7 @@ class depthFusion_keras(gym.Env):
            # print('covered', self.count_steps)
        else:
            reward = cd_delta*0.2
+           reward += -1 # added to push minimization of steps
 
        self.cd_old = cd
 
