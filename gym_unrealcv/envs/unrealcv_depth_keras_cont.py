@@ -22,7 +22,7 @@ import keras.backend as K
 
 
 
-class depthFusion_keras(gym.Env):
+class depthFusion_keras_cont(gym.Env):
     # init the Unreal Gym Environment
     def __init__(self,
                 setting_file = 'depth_fusion.json',
@@ -108,6 +108,9 @@ class depthFusion_keras(gym.Env):
      #         (20,-30),
      # ]
      self.count_steps = 0
+     self.depth_count = 0
+     self.depth_thresh = 0.5
+     self.total_distance = 0
      # self.max_steps = 35
      self.target_pos = ( -60,   0,   50)
      self.pose_prev = np.array(self.start_pose_rel)
@@ -116,7 +119,6 @@ class depthFusion_keras(gym.Env):
      # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
      self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
-     self.total_distance = 0
      # if K.backend() == 'tensorflow':
      #     config = tf.ConfigProto()
      #     config.gpu_options.allow_growth = True
@@ -125,14 +127,16 @@ class depthFusion_keras(gym.Env):
      # self.sess = K.get_session()
     # update the environment step by step
     def _step(self, action = 0):
-        # (velocity, angle) = self.ACTION_LIST[action]
+
+
         self.count_steps += 1
         # collision =  self.unrealcv.move(self.cam_id, angle, velocity)
         # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
         # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
         # azimuth, elevation, distance = action
         # azimuth, elevation, distance = self.ACTION_LIST[action]
-        azimuth, elevation, distance  = self.discrete_actions[action]
+        azimuth, elevation, distance  = action
+        # print('az, elev, dist', azimuth, elevation, distance)
         change_pose = np.array((azimuth, elevation, distance))
 
         pose_prev = np.array(self.pose_prev)
@@ -142,10 +146,11 @@ class depthFusion_keras(gym.Env):
         MIN_elevation = 20
         MAX_elevation = 70
         MIN_distance = 100
-        # MAX_distance = 150
-        MAX_distance = 125
+        MAX_distance = 150
+        # MAX_distance = 125
 
         pose_new = pose_prev + change_pose
+        # print('pose new 1', pose_new)
         # pose_new = pose_prev + np.array([30,0,0]) # to test ICM
         if pose_new[2] > MAX_distance:
             pose_new[2] = MAX_distance
@@ -155,11 +160,11 @@ class depthFusion_keras(gym.Env):
             pose_new[1] = MAX_elevation
         elif (pose_new[1] <= MIN_elevation):
             pose_new[1] = MIN_elevation
-        else:
-            pose_new[1] = 45.0
+        # else:
+        #     pose_new[1] = 45.0
         if (pose_new[0] < 0):
             pose_new[0] = 360 + pose_new[0]
-        elif (pose_new[0]>=359):
+        elif (pose_new[0]>=359.99):
             pose_new[0] = pose_new[0] - 360
 
         # print('action ', action)
@@ -170,7 +175,7 @@ class depthFusion_keras(gym.Env):
         # print('collision', collision)
         # print('distance:   ', move_dist)
 
-        self.pose_prev =pose_new
+        self.pose_prev = pose_new
         # state = self.unrealcv.read_image(self.cam_id, 'lit')
         state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
         # print('state shape', state.shape)
@@ -219,8 +224,6 @@ class depthFusion_keras(gym.Env):
        else:
            self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
        # state = self.unrealcv.read_image(self.cam_id, 'lit')
-       # print('objects', self.unrealcv.get_objects())
-       # self.unrealcv.hide_obj('BAT6_SETA_HOUSE44_12')
        state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
        self.count_steps = 0
        depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
@@ -232,15 +235,11 @@ class depthFusion_keras(gym.Env):
        np.save(depth_filename, depth)
 
        out_pcl_np = depth_fusion(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_steps + 1, save_pcd = False, max_depth = 1.0)
-       # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
-       # out_pcl = pcl.load(out_fn)
-       # out_pcl_np = np.asarray(out_pcl)
+       #
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        self.cd_old = self.compute_chamfer(out_pcl_np)
-       print('cd old ', self.cd_old)
+       # print('cd old ', self.cd_old)
        self.pose_prev = np.array(self.start_pose_rel)
-
-
 
        return  state
 
@@ -249,13 +248,12 @@ class depthFusion_keras(gym.Env):
        # self.docker.close()
 
     # calcuate reward according to your task
-    def reward(self,collision, move_dist):
+    def reward(self,collision,move_dist):
 
 
        done = False
 
        depth_start = time.time()
-
        out_pcl_np = depth_fusion(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_steps + 1, save_pcd = False, max_depth = 1.0)
        # print('out_pcl_np', out_pcl_np.shape)
        if out_pcl_np.shape[0] != 0:
@@ -264,29 +262,30 @@ class depthFusion_keras(gym.Env):
        else:
            cd = 0.0
        cd_delta = cd - self.cd_old
-
        depth_end = time.time()
-
 
        # print("Depth Fusion time: ", depth_end - depth_start)
        # print('coverage: ', cd)
-       if cd > 97.0:
-       # if cd > 96.5:
+       # if cd > 30.0:
+       if cd > 96.0:
        # if cd > 60.0:
            done = True
-           # reward = 50
            reward = 100
             # print('covered', self.count_steps)
        else:
            # reward = cd_delta*0.2
            reward = cd_delta
            # reward = cd_delta*0.4
-           reward += -2 # added to push minimization of steps
-
+           # reward += -0.2 * move_dist # added to push minimization of steps
+           # reward += -0.01 * move_dist
+           # reward += -0.02 * move_dist
+           reward += -0.04 * move_dist
+           # print('move dist ', move_dist)
+           # print('cd delta', cd_delta)
        self.cd_old = cd
+       # print('reward ', reward)
        self.total_distance += move_dist
-       print('move_dist', move_dist)
-       print('total_dist', self.total_distance)
+       # print('total distance: ', self.total_distance)
        return reward, done
 
     # calcuate the 2D distance between the target and camera

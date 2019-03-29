@@ -10,7 +10,7 @@ from gym_unrealcv.envs.navigation.interaction import Navigation
 import random
 from math import sin, cos, radians
 
-from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin
+from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin, depth_fusion_mult
 import time
 import pcl
 # import run_docker # a lib for run env in a docker container
@@ -22,7 +22,7 @@ import keras.backend as K
 
 
 
-class depthFusion_keras(gym.Env):
+class depthFusion_keras_multHouse(gym.Env):
     # init the Unreal Gym Environment
     def __init__(self,
                 setting_file = 'depth_fusion.json',
@@ -44,10 +44,7 @@ class depthFusion_keras(gym.Env):
      self.reset_type = 'test'
      self.log_dir = log_dir
      # gt_pcl = pcl.load('house-000024-gt.ply')
-     gt_pcl = pcl.load('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
-     # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
-     self.gt_pcl = np.asarray(gt_pcl)
-     self.gt_pcl = np.expand_dims(self.gt_pcl,axis=0)
+
      # run virtual enrionment in docker container
      # self.docker = run_docker.RunDocker()
      # env_ip, env_dir = self.docker.start(ENV_NAME=ENV_NAME)
@@ -98,40 +95,43 @@ class depthFusion_keras(gym.Env):
      poseOrigin(self.log_dir+'frame-{:06}.pose.txt'.format(1000))
      # ACTION: (Azimuth, Elevation, Distance)
 
-
-     # ACTION: (linear velocity ,angle velocity)
-     # self.ACTION_LIST = [
-     #         (20,  0),
-     #         (20, 15),
-     #         (20,-15),
-     #         (20, 30),
-     #         (20,-30),
-     # ]
      self.count_steps = 0
+     self.count_house_frames = 0
      # self.max_steps = 35
      self.target_pos = ( -60,   0,   50)
-     self.pose_prev = np.array(self.start_pose_rel)
+     self.gt_pclpose_prev = np.array(self.start_pose_rel)
      # self.action_space = gym.spaces.Discrete(len(self.ACTION_LIST))
      # state = self.unrealcv.read_image(self.cam_id, 'lit')
      # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
      self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
      self.total_distance = 0
-     # if K.backend() == 'tensorflow':
-     #     config = tf.ConfigProto()
-     #     config.gpu_options.allow_growth = True
-     #     self.sess = tf.Session(config=config)
-     #     K.set_session(self.sess)
-     # self.sess = K.get_session()
-    # update the environment step by step
+
+     objects = self.unrealcv.get_objects()
+     # print('objects', objects)
+     self.houses = [(obj) for obj in objects if obj.startswith('BAT6_')]
+     # print('houses', self.houses)
+     for house in self.houses:
+         self.unrealcv.hide_obj(house)
+
+     self.house_id = 0
+     self.unrealcv.show_obj(self.houses[self.house_id])
+
+     gt_dir = '/hdd/AIRSCAN/datasets/house38_44/groundtruth/'
+
+     self.gt_pcl = []
+     for i in range(len(self.houses)):
+         gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
+         # print('gt', gt_fn)
+         gt_pcl = pcl.load(gt_fn)
+         # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
+         gt_pcl = np.asarray(gt_pcl)
+         self.gt_pcl.append(np.expand_dims(gt_pcl,axis=0))
+
     def _step(self, action = 0):
         # (velocity, angle) = self.ACTION_LIST[action]
         self.count_steps += 1
-        # collision =  self.unrealcv.move(self.cam_id, angle, velocity)
-        # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
-        # collision = self.unrealcv.move_2d(self.cam_id, angle, velocity)
-        # azimuth, elevation, distance = action
-        # azimuth, elevation, distance = self.ACTION_LIST[action]
+        self.count_house_frames +=1
         azimuth, elevation, distance  = self.discrete_actions[action]
         change_pose = np.array((azimuth, elevation, distance))
 
@@ -177,8 +177,10 @@ class depthFusion_keras(gym.Env):
         depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
         pose = self.unrealcv.get_pose(self.cam_id,'soft')
         depth = depth_conversion(depth_pt, 320)
-        pose_filename = self.log_dir+'frame-{:06}.pose.txt'.format(self.count_steps)
-        depth_filename = self.log_dir+'frame-{:06}.depth.npy'.format(self.count_steps)
+        # pose_filename = self.log_dir+'frame-{:06}.pose.txt'.format(self.count_steps)
+        # depth_filename = self.log_dir+'frame-{:06}.depth.npy'.format(self.count_steps)
+        pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_house_frames, self.house_id)
+        depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_house_frames, self.house_id)
         write_pose(pose, pose_filename)
         np.save(depth_filename, depth)
         reward, done = self.reward(collision,move_dist)
@@ -195,6 +197,12 @@ class depthFusion_keras(gym.Env):
     def _reset(self, start_pose_rel = None):
 
        x,y,z,_, yaw, _ = self.startpose
+       self.house_id = 0
+
+       for house in self.houses:
+           self.unrealcv.hide_obj(house)
+
+       self.unrealcv.show_obj(self.houses[self.house_id])
 
        if self.reset_type == 'random':
            distance = 1000
@@ -218,29 +226,30 @@ class depthFusion_keras(gym.Env):
 
        else:
            self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
-       # state = self.unrealcv.read_image(self.cam_id, 'lit')
-       # print('objects', self.unrealcv.get_objects())
-       # self.unrealcv.hide_obj('BAT6_SETA_HOUSE44_12')
+
        state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
+
        self.count_steps = 0
+       self.count_house_frames = 0
+
        depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
        pose = self.unrealcv.get_pose(self.cam_id,'soft')
        depth = depth_conversion(depth_pt, 320)
-       pose_filename = self.log_dir+'frame-{:06}.pose.txt'.format(self.count_steps)
-       depth_filename = self.log_dir+'frame-{:06}.depth.npy'.format(self.count_steps)
+       # depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_steps)
+       # pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_steps)
+       pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_house_frames, self.house_id)
+       depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_house_frames, self.house_id)
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       out_pcl_np = depth_fusion(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_steps + 1, save_pcd = False, max_depth = 1.0)
+       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = False, max_depth = 1.0, house_id=self.house_id)
        # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
        # out_pcl = pcl.load(out_fn)
        # out_pcl_np = np.asarray(out_pcl)
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        self.cd_old = self.compute_chamfer(out_pcl_np)
-       print('cd old ', self.cd_old)
+       # print('cd old ', self.cd_old)
        self.pose_prev = np.array(self.start_pose_rel)
-
-
 
        return  state
 
@@ -251,12 +260,11 @@ class depthFusion_keras(gym.Env):
     # calcuate reward according to your task
     def reward(self,collision, move_dist):
 
-
        done = False
 
        depth_start = time.time()
 
-       out_pcl_np = depth_fusion(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_steps + 1, save_pcd = False, max_depth = 1.0)
+       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = False, max_depth = 1.0, house_id=self.house_id)
        # print('out_pcl_np', out_pcl_np.shape)
        if out_pcl_np.shape[0] != 0:
            out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
@@ -270,13 +278,41 @@ class depthFusion_keras(gym.Env):
 
        # print("Depth Fusion time: ", depth_end - depth_start)
        # print('coverage: ', cd)
-       if cd > 97.0:
-       # if cd > 96.5:
-       # if cd > 60.0:
-           done = True
-           # reward = 50
-           reward = 100
-            # print('covered', self.count_steps)
+       if cd > 96.0:
+
+           self.unrealcv.hide_obj(self.houses[self.house_id])
+           self.house_id += 1
+
+           if (self.house_id == len(self.houses)):
+               done = True
+               # reward = 50
+               reward = 50
+           else:
+                # print('covered', self.count_steps)
+               # print('new house')
+               self.unrealcv.show_obj(self.houses[self.house_id])
+               self.count_house_frames = 0
+               reward = 100
+
+               self.unrealcv.set_pose(self.cam_id,self.startpose)
+               depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
+               pose = self.unrealcv.get_pose(self.cam_id,'soft')
+               depth = depth_conversion(depth_pt, 320)
+               # depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_steps)
+               # pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_steps)
+               pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_house_frames, self.house_id)
+               depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_house_frames, self.house_id)
+               write_pose(pose, pose_filename)
+               np.save(depth_filename, depth)
+
+               out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = False, max_depth = 1.0, house_id=self.house_id)
+               # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
+               # out_pcl = pcl.load(out_fn)
+               # out_pcl_np = np.asarray(out_pcl)
+               out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
+               self.cd_old = self.compute_chamfer(out_pcl_np)
+               self.pose_prev = np.array(self.start_pose_rel)
+
        else:
            # reward = cd_delta*0.2
            reward = cd_delta
@@ -285,8 +321,7 @@ class depthFusion_keras(gym.Env):
 
        self.cd_old = cd
        self.total_distance += move_dist
-       print('move_dist', move_dist)
-       print('total_dist', self.total_distance)
+
        return reward, done
 
     # calcuate the 2D distance between the target and camera
@@ -341,7 +376,7 @@ class depthFusion_keras(gym.Env):
                # reta,retb,retc,retd=self.nn_distance(inp_placeholder,self.gt_pcl)
                # with tf.name_scope('chamfer'):
                # reta,retb,retc,retd=self.nn_distance(output,self.gt_pcl)
-               _,_,retc,_=self.nn_distance(output,self.gt_pcl)
+               _,_,retc,_=self.nn_distance(output,self.gt_pcl[self.house_id])
                # loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
 
                # loss=tf.reduce_sum(retc)
@@ -350,33 +385,11 @@ class depthFusion_keras(gym.Env):
 
                # loss_out = tf.Tensor.eval(loss)
                coverage = tf.Tensor.eval(dist_mean)
-               #
-               #
-               # dist_thresh2 = tf.greater(0.0008, reta)
-               # dist_mean2 = tf.reduce_mean(tf.cast(dist_thresh2, tf.float32))
-               #
                # coverage2 = tf.Tensor.eval(dist_mean2)
                # print('coverage2 ', coverage2)
                # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
                # print('coverage ', coverage)
                return coverage*100
-
-    # def nn_distance_init(self, output):
-
-
-       #@tf.RegisterShape('NnDistance')
-       #def _nn_distance_shape(op):
-        #shape1=op.inputs[0].get_shape().with_rank(3)
-        #shape2=op.inputs[1].get_shape().with_rank(3)
-        #return [tf.TensorShape([shape1.dims[0],shape1.dims[1]]),tf.TensorShape([shape1.dims[0],shape1.dims[1]]),
-            #tf.TensorShape([shape2.dims[0],shape2.dims[1]]),tf.TensorShape([shape2.dims[0],shape2.dims[1]])]
-       # @ops.RegisterGradient('NnDistance')
-       # def _nn_distance_grad(op,grad_dist1,grad_idx1,grad_dist2,grad_idx2):
-       #     xyz1=op.inputs[0]
-       #     xyz2=op.inputs[1]
-       #     idx1=op.outputs[1]
-       #     idx2=op.outputs[3]
-       #     return nn_distance_module.nn_distance_grad(xyz1,xyz2,grad_dist1,idx1,grad_dist2,idx2)
 
     def nn_distance(self,xyz1,xyz2):
        '''

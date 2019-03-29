@@ -70,7 +70,7 @@ class UnrealCvSearch_base(gym.Env):
      # define observation space,
      # color, depth, rgbd,...
      self.observation_type = observation_type
-     assert self.observation_type == 'color' or self.observation_type == 'depth' or self.observation_type == 'rgbd'
+     assert self.observation_type == 'color' or self.observation_type == 'depth' or self.observation_type == 'rgbd' or self.observation_type == 'gray'
      self.observation_shape = self.unrealcv.define_observation(self.cam_id,self.observation_type)
 
      # define reward type
@@ -159,7 +159,7 @@ class UnrealCvSearch_base(gym.Env):
                 info['Reward'] = -1
                 info['Done'] = True
                 self.reset_module.update_dis2collision(info['Pose'])
-                print ('Collision!!')
+                # print ('Collision!!')
 
         # update observation
         state = self.unrealcv.get_observation(self.cam_id, self.observation_type)

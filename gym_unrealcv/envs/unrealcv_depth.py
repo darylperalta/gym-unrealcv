@@ -90,7 +90,7 @@ class depthFusion(gym.Env):
      # self.startpose = [0.0,99.6,8.72,0.0,270.0,-5.0] #[for depth fusion] [0,5,100]
      # self.startpose = [0.0,70.7,70.7,0.0,270.0,-45.0]
      azimuth, elevation, distance = self.start_pose_rel
-     # print('start pose rel', azimuth,elevation,distance)
+     print('start pose rel', azimuth,elevation,distance)
      self.startpose = poseRelToAbs(azimuth, elevation, distance)
      # print('start_pose: ', self.startpose)
      ''' create base frame '''
@@ -130,9 +130,9 @@ class depthFusion(gym.Env):
         azimuth, elevation, distance = action
         # azimuth, elevation, distance = self.ACTION_LIST[action]
         # azimuth, elevation, distance  = self.discrete_actions[action]
-        print('action ', action)
-        print('pose')
-        print(azimuth, elevation, distance )
+        # print('action ', action)
+        # print('pose')
+        # print(azimuth, elevation, distance )
         collision, move_dist = self.unrealcv.move_rel(self.cam_id, azimuth, elevation, distance)
 
         # print('distance:   ', move_dist)
@@ -196,7 +196,7 @@ class depthFusion(gym.Env):
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =False)
+       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd =True, max_depth=1.0)
        # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
        # out_pcl = pcl.load(out_fn)
        # out_pcl_np = np.asarray(out_pcl)
@@ -236,7 +236,7 @@ class depthFusion(gym.Env):
        # print('numframes:', self.count_steps+1)
        depth_start = time.time()
 
-       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd = False)
+       out_pcl_np = depth_fusion(self.log_dir,first_frame_idx =0,base_frame_idx=1000,num_frames = self.count_steps+1,save_pcd = True, max_depth=1.0)
        # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
        # out_pcl = pcl.load(out_fn)
        # out_pcl_np = np.asarray(out_pcl)
@@ -244,15 +244,15 @@ class depthFusion(gym.Env):
        cd = self.compute_chamfer(out_pcl_np)
        cd_delta = cd - self.cd_old
        # cd_delta = cd_delta
-       print('coverage: ', cd)
+       # print('coverage: ', cd)
        # print('cov del: ', cd_delta)
        depth_end = time.time()
 
 
        # print("Depth Fusion time: ", depth_end - depth_start)
 
-       if cd > 97.0:
-           # done = True
+       if cd > 99.0:
+           done = True
            reward = 50
            print('covered', self.count_steps)
        else:
@@ -318,10 +318,12 @@ class depthFusion(gym.Env):
                # loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
                loss=tf.reduce_sum(retc)
                dist_thresh = tf.greater(0.0008, retc)
+               # dist_thresh = tf.greater(0.0002, retc)
                dist_mean = tf.reduce_mean(tf.cast(dist_thresh, tf.float32))
 
                # loss_out = tf.Tensor.eval(loss)
                coverage = tf.Tensor.eval(dist_mean)
+               print('coverage ', coverage)
                # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
                return coverage*100
 
