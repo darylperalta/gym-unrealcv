@@ -38,6 +38,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 resolution = (640,480),
                 log_dir='log/'
     ):
+     self.test = True
+     self.save_pcd = True
+     self.disp_houses = True
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0
      # self.reset_type = 'random'
@@ -113,25 +116,92 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      for house in self.houses:
          self.unrealcv.hide_obj(house)
      print('houses before', self.houses)
+     # remove_num = [1,4,10,35,48,25,40,46,50]
+     remove_num = [1,4,10,35,48,50] # remove House 50
+     # for i in range(len(self.houses)):
+     i = 0
+
+     # Normal
+     while(1):
+         num = int((self.houses[i].split('HOUSE')[1]).split('_')[0])
+         if num in remove_num:
+             print('removed', self.houses.pop(i))
+             remove_num.remove(num)
+             if len(remove_num) == 0:
+                 break
+             # else:
+             #     i = 0
+         else:
+            i += 1
+
+     # display houses
+     if self.disp_houses == True:
+         print('display houses')
+         for i in range(len(self.houses)):
+             print('id', i)
+             print('filename', self.houses[i])
+
+     # Test House7
+     # for i in range(49,-1,-1):
+     #     num = int((self.houses[i].split('HOUSE')[1]).split('_')[0])
+     #     if num == 7:
+     #         continue
+     #     else:
+     #         print('removed', self.houses.pop(i))
+     #     i += 1
+
+         # if num in remove_num:
+         #     print('removed', self.houses.pop(i))
+         #     remove_num.remove(num)
+         #     if len(remove_num) == 0:
+         #         break
+             # else:
+             #     i = 0
+
+
+
      # self.houses.pop(8) # remove house:  BAT6_SETA_HOUSE7_WTR_17
+     # print('removed', self.houses.pop(39))
+     # print('removed', self.houses.pop(36))
+     # print('removed', self.houses.pop(30))
+     # print('removed', self.houses.pop(16))
+     # print('removed', self.houses.pop(14))
+     # print('removed', self.houses.pop(12))
+     # self.houses.pop()
+     # self.houses.pop()
      self.num_house = len(self.houses)
      print('houses new', self.houses)
+     self.house_ids_ordered = list(range(len(self.houses)))
+     print('house_ids_ordered',self.house_ids_ordered)
+     self.house_ids_shuffle = random.shuffle(self.house_ids_ordered)
+     print(self.house_ids_shuffle)
+
      # self.house
      print('num houses', self.num_house)
 
      for house in self.houses:
          self.unrealcv.hide_obj(house)
 
-     self.house_id = random.randint(0, self.num_house-1) # randomize houses
+     self.ids = list(range(self.num_house))
+     print('ids', self.ids)
+     self.shuffle_ids = self.ids.copy()
+     random.shuffle(self.shuffle_ids)
+     print('shuffled ids', self.shuffle_ids)
+     # self.house_id = 40
+     if self.test == True:
+         self.house_id = -1
+     else:
+         self.house_id = random.randint(0, self.num_house-1) # randomize houses
 
      self.unrealcv.show_obj(self.houses[self.house_id])
 
      # gt_dir = '/hdd/AIRSCAN/datasets/house38_44_2/groundtruth/'
-     gt_dir = '/hdd/AIRSCAN/datasets/house_10/groundtruth/'
-
+     # gt_dir = '/hdd/AIRSCAN/datasets/house_10/groundtruth/'
+     gt_dir = '/hdd/AIRSCAN/datasets/house_setA_comp/groundtruth/'
      self.gt_pcl = []
      for i in range(len(self.houses)):
-         gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
+         # gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
+         gt_fn = gt_dir + self.houses[i].split('_WTR')[0] + '_WTR.ply'
          # print('gt', gt_fn)
          gt_pcl = pcl.load(gt_fn)
          # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
@@ -140,6 +210,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
     def _step(self, action = 0):
         # (velocity, angle) = self.ACTION_LIST[action]
+        # print('action', action)
         self.count_steps += 1
         self.count_house_frames +=1
         azimuth, elevation, distance  = self.discrete_actions[action]
@@ -149,11 +220,14 @@ class depthFusion_keras_multHouse_rand(gym.Env):
         # print('pose prev', pose_prev)
         # print('action', change_pose)
 
-        MIN_elevation = 20
-        MAX_elevation = 70
+        # MIN_elevation = 20
+        MIN_elevation = 10
+        # MAX_elevation = 70
+        MAX_elevation = 80
         MIN_distance = 100
-        # MAX_distance = 150
-        MAX_distance = 125
+        MAX_distance = 150
+        # MAX_distance = 175
+        # MAX_distance = 125
 
         pose_new = pose_prev + change_pose
         # pose_new = pose_prev + np.array([30,0,0]) # to test ICM
@@ -165,8 +239,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
             pose_new[1] = MAX_elevation
         elif (pose_new[1] <= MIN_elevation):
             pose_new[1] = MIN_elevation
-        else:
-            pose_new[1] = 45.0
+        # else:
+            # pose_new[1] = 45.0
         if (pose_new[0] < 0):
             pose_new[0] = 360 + pose_new[0]
         elif (pose_new[0]>=359):
@@ -237,12 +311,20 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        else:
            for house in self.houses:
                self.unrealcv.hide_obj(house)
+           if self.test == True:
+               self.house_id += 1
+               #8 'dont use'
+               self.house_id = 30
+               print('Testing House: ', self.houses[self.house_id])
+               print(self.house_id)
+               print('house id', self.house_id)
+           else:
+               # self.house_id = random.randint(0, self.num_house-1) # randomize houses
+               # self.house_id = 39 #House 46
+               self.house_id = self.shuffle_ids.pop()
+               if len(self.shuffle_ids) == 0:
+                   self.shuffle_ids = self.ids.copy()
 
-           self.house_id = random.randint(0, self.num_house-1) # randomize houses
-           self.house_id = 11
-           #8 'dont use'
-           print('Testing House: ', self.houses[self.house_id])
-           # print('house id', self.house_id)
            self.unrealcv.show_obj(self.houses[self.house_id])
 
            self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
@@ -262,7 +344,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = False, max_depth = 1.0, house_id=self.house_id)
+       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = 1.0, house_id=self.house_id)
        # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
        # out_pcl = pcl.load(out_fn)
        # out_pcl_np = np.asarray(out_pcl)
@@ -284,7 +366,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        depth_start = time.time()
 
-       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = False, max_depth = 1.0, house_id=self.house_id)
+       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = 1.0, house_id=self.house_id)
        # print('out_pcl_np', out_pcl_np.shape)
        if out_pcl_np.shape[0] != 0:
            out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
@@ -297,7 +379,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
 
        # print("Depth Fusion time: ", depth_end - depth_start)
-       # print('coverage: ', cd)
+       if self.test == True:
+           print('coverage: ', cd)
        if cd > 96.0:
        # if cd > 50.0:
 
@@ -339,7 +422,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        self.cd_old = cd
        self.total_distance += move_dist
-       print('total distance: ', self.total_distance)
+       if (self.test == True) and (self.count_house_frames == 50):
+           done = True
+       # print('total distance: ', self.total_distance)
        return reward, done
 
     # calcuate the 2D distance between the target and camera
