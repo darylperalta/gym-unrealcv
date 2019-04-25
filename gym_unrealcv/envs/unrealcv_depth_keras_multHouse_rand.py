@@ -38,8 +38,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 resolution = (640,480),
                 log_dir='log/'
     ):
+     # self.test = False
      self.test = True
-     self.save_pcd = True
+     self.save_pcd = False
      self.disp_houses = True
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0
@@ -112,28 +113,71 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
      objects = self.unrealcv.get_objects()
      # print('objects', objects)
-     self.houses = [(obj) for obj in objects if obj.startswith('BAT6_')]
-     for house in self.houses:
-         self.unrealcv.hide_obj(house)
-     print('houses before', self.houses)
+     # self.houses = [(obj) for obj in objects if obj.startswith('BAT6_')]
+     self.housesA = [(obj) for obj in objects if obj.startswith('BAT6_SETA')]
+     self.housesB = [(obj) for obj in objects if obj.startswith('BAT6_SETB')]
+     print('A', self.housesA)
+     print('B', self.housesB)
+
+
+     # for house in self.houses:
+     #     self.unrealcv.hide_obj(house)
+     # print('houses before', self.houses)
      # remove_num = [1,4,10,35,48,25,40,46,50]
-     remove_num = [1,4,10,35,48,50] # remove House 50
+     # remove_num = [1,4,10,35,48,50] # remove House 50
      # for i in range(len(self.houses)):
+     # i = 0
+     #
+     # # Normal
+     # while(1):
+     #     num = int((self.houses[i].split('HOUSE')[1]).split('_')[0])
+     #     if num in remove_num:
+     #         print('removed', self.houses.pop(i))
+     #         remove_num.remove(num)
+     #         if len(remove_num) == 0:
+     #             break
+     #         # else:
+     #         #     i = 0
+     #     else:
+     #        i += 1
+
+
+     for house in self.housesA:
+         self.unrealcv.hide_obj(house)
+     for house in self.housesB:
+         self.unrealcv.hide_obj(house)
+     #Remove for SetA
      i = 0
 
-     # Normal
+     remove_numA = [1,4,10,35,48,50] # remove House 50
      while(1):
-         num = int((self.houses[i].split('HOUSE')[1]).split('_')[0])
-         if num in remove_num:
-             print('removed', self.houses.pop(i))
-             remove_num.remove(num)
-             if len(remove_num) == 0:
+         num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
+         if num in remove_numA:
+             print('removed', self.housesA.pop(i))
+             remove_numA.remove(num)
+             if len(remove_numA) == 0:
                  break
              # else:
              #     i = 0
          else:
             i += 1
+     # Remove for B
+     i = 0
 
+     remove_numB = [3,4,21,31,45,49,50] # remove House 50 removd house31 wrong origin
+     while(1):
+         num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
+         if num in remove_numB:
+             print('removed', self.housesB.pop(i))
+             remove_numB.remove(num)
+             if len(remove_numB) == 0:
+                 break
+            # else:
+            #     i = 0
+         else:
+            i += 1
+
+     self.houses = self.housesA + self.housesB
      # display houses
      if self.disp_houses == True:
          print('display houses')
@@ -314,7 +358,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            if self.test == True:
                self.house_id += 1
                #8 'dont use'
-               self.house_id = 30
+               self.house_id = 41
+               # self.house_id = 70
                print('Testing House: ', self.houses[self.house_id])
                print(self.house_id)
                print('house id', self.house_id)
@@ -324,6 +369,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                self.house_id = self.shuffle_ids.pop()
                if len(self.shuffle_ids) == 0:
                    self.shuffle_ids = self.ids.copy()
+                   random.shuffle(self.shuffle_ids)
 
            self.unrealcv.show_obj(self.houses[self.house_id])
 
@@ -388,31 +434,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            done = True
                # reward = 50
            reward = 100
-           # else:
-           #      # print('covered', self.count_steps)
-           #     # print('new house')
-           #     self.unrealcv.show_obj(self.houses[self.house_id])
-           #     self.count_house_frames = 0
-           #     reward = 100
-           #
-           #     self.unrealcv.set_pose(self.cam_id,self.startpose)
-           #     depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
-           #     pose = self.unrealcv.get_pose(self.cam_id,'soft')
-           #     depth = depth_conversion(depth_pt, 320)
-           #     # depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_steps)
-           #     # pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_steps)
-           #     pose_filename = self.log_dir+'frame-{:06}.pose-{:06}.txt'.format(self.count_house_frames, self.house_id)
-           #     depth_filename = self.log_dir+'frame-{:06}.depth-{:06}.npy'.format(self.count_house_frames, self.house_id)
-           #     write_pose(pose, pose_filename)
-           #     np.save(depth_filename, depth)
-           #
-           #     out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = False, max_depth = 1.0, house_id=self.house_id)
-           #     # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
-           #     # out_pcl = pcl.load(out_fn)
-           #     # out_pcl_np = np.asarray(out_pcl)
-           #     out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
-           #     self.cd_old = self.compute_chamfer(out_pcl_np)
-           #     self.pose_prev = np.array(self.start_pose_rel)
+
 
        else:
            # reward = cd_delta*0.2
