@@ -146,36 +146,36 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          self.unrealcv.hide_obj(house)
      for house in self.housesB:
          self.unrealcv.hide_obj(house)
-     #Remove for SetA
-     i = 0
-
-     remove_numA = [1,4,10,35,48,50] # remove House 50
-     while(1):
-         num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
-         if num in remove_numA:
-             print('removed', self.housesA.pop(i))
-             remove_numA.remove(num)
-             if len(remove_numA) == 0:
-                 break
-             # else:
-             #     i = 0
-         else:
-            i += 1
-     # Remove for B
-     i = 0
-
-     remove_numB = [3,4,21,31,45,49,50] # remove House 50 removd house31 wrong origin
-     while(1):
-         num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
-         if num in remove_numB:
-             print('removed', self.housesB.pop(i))
-             remove_numB.remove(num)
-             if len(remove_numB) == 0:
-                 break
-            # else:
-            #     i = 0
-         else:
-            i += 1
+     # #Remove for SetA
+     # i = 0
+     #
+     # remove_numA = [1,4,10,35,48,50] # remove House 50
+     # while(1):
+     #     num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
+     #     if num in remove_numA:
+     #         print('removed', self.housesA.pop(i))
+     #         remove_numA.remove(num)
+     #         if len(remove_numA) == 0:
+     #             break
+     #         # else:
+     #         #     i = 0
+     #     else:
+     #        i += 1
+     # # Remove for B
+     # i = 0
+     #
+     # remove_numB = [3,4,21,31,45,49,50] # remove House 50 removd house31 wrong origin
+     # while(1):
+     #     num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
+     #     if num in remove_numB:
+     #         print('removed', self.housesB.pop(i))
+     #         remove_numB.remove(num)
+     #         if len(remove_numB) == 0:
+     #             break
+     #        # else:
+     #        #     i = 0
+     #     else:
+     #        i += 1
 
      self.houses = self.housesA + self.housesB
      # display houses
@@ -234,6 +234,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # self.house_id = 40
      if self.test == True:
          self.house_id = -1
+         self.testB_id = 0
+         self.testA_id = 0
+
      else:
          self.house_id = random.randint(0, self.num_house-1) # randomize houses
 
@@ -358,11 +361,53 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            if self.test == True:
                self.house_id += 1
                #8 'dont use'
-               self.house_id = 41
+               # self.house_id = 41
                # self.house_id = 70
-               print('Testing House: ', self.houses[self.house_id])
+               # Add extracting house id's from a list of house numbers
+               # testB = [3,4,21,45,49]
+               # i = 0
+               # while(1):
+               #     num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
+               #     if num == testB[self.testB_id]:
+               #         # print('removed', self.housesB.pop(i))
+               #
+               #         self.house_id = i
+               #         self.testB_id += 1
+               #         break
+               #         # remove_numB.remove(num)
+               #         # if len(remove_numB) == 0:
+               #         #     break
+               #        # else:
+               #        #     i = 0
+               #     else:
+               #        i += 1
+
+               # testA = [3,4,21,45,49]
+               testA = [1,4,10,35,48]
+               i = 0
+               while(1):
+                   num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
+                   if num == testA[self.testA_id]:
+                       # print('removed', self.housesB.pop(i))
+
+                       self.house_id = i
+                       self.testA_id += 1
+                       break
+                       # remove_numB.remove(num)
+                       # if len(remove_numB) == 0:
+                       #     break
+                      # else:
+                      #     i = 0
+                   else:
+                      i += 1
+
+               # print('Testing House: ', self.housesB[self.house_id])
+               print('Testing House: ', self.housesA[self.house_id])
+
                print(self.house_id)
                print('house id', self.house_id)
+               # self.unrealcv.show_obj(self.housesB[self.house_id])
+               self.unrealcv.show_obj(self.housesA[self.house_id])
            else:
                # self.house_id = random.randint(0, self.num_house-1) # randomize houses
                # self.house_id = 39 #House 46
@@ -371,7 +416,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                    self.shuffle_ids = self.ids.copy()
                    random.shuffle(self.shuffle_ids)
 
-           self.unrealcv.show_obj(self.houses[self.house_id])
+               self.unrealcv.show_obj(self.houses[self.house_id])
 
            self.unrealcv.set_pose(self.cam_id,self.startpose) # pose = [x, y, z, roll, yaw, pitch]
 
