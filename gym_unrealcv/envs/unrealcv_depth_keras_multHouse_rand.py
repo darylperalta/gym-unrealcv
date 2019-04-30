@@ -39,7 +39,14 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 log_dir='log/'
     ):
      # self.test = False
-     self.test = True
+     self.test = False
+     self.testSet = True
+     self.testSetA = False
+     self.testSetB = False
+     self.testSetC = False
+     self.testSetD = False
+     self.testSetE = True
+
      self.save_pcd = False
      self.disp_houses = True
      setting = self.load_env_setting(setting_file)
@@ -116,8 +123,22 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # self.houses = [(obj) for obj in objects if obj.startswith('BAT6_')]
      self.housesA = [(obj) for obj in objects if obj.startswith('BAT6_SETA')]
      self.housesB = [(obj) for obj in objects if obj.startswith('BAT6_SETB')]
+     self.housesC = [(obj) for obj in objects if obj.startswith('BAT6_SETC')]
+     self.housesD = [(obj) for obj in objects if obj.startswith('BAT6_SETD')]
+     self.housesE = [(obj) for obj in objects if obj.startswith('BAT6_SETE')]
+
      print('A', self.housesA)
+     self.housesA.sort()
      print('B', self.housesB)
+     self.housesB.sort()
+     print('B sorted', self.housesB)
+     self.housesC.sort()
+     print('C', self.housesC)
+     self.housesD.sort()
+     print('D', self.housesD)
+     self.housesE.sort()
+     print('E', self.housesE)
+
 
 
      # for house in self.houses:
@@ -141,43 +162,86 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      #     else:
      #        i += 1
 
-
+     # hide houses
      for house in self.housesA:
          self.unrealcv.hide_obj(house)
      for house in self.housesB:
          self.unrealcv.hide_obj(house)
-     # #Remove for SetA
-     # i = 0
-     #
-     # remove_numA = [1,4,10,35,48,50] # remove House 50
-     # while(1):
-     #     num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
-     #     if num in remove_numA:
-     #         print('removed', self.housesA.pop(i))
-     #         remove_numA.remove(num)
-     #         if len(remove_numA) == 0:
-     #             break
-     #         # else:
-     #         #     i = 0
-     #     else:
-     #        i += 1
-     # # Remove for B
-     # i = 0
-     #
-     # remove_numB = [3,4,21,31,45,49,50] # remove House 50 removd house31 wrong origin
-     # while(1):
-     #     num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
-     #     if num in remove_numB:
-     #         print('removed', self.housesB.pop(i))
-     #         remove_numB.remove(num)
-     #         if len(remove_numB) == 0:
-     #             break
-     #        # else:
-     #        #     i = 0
-     #     else:
-     #        i += 1
+     for house in self.housesC:
+         self.unrealcv.hide_obj(house)
+     for house in self.housesD:
+         self.unrealcv.hide_obj(house)
+     for house in self.housesE:
+         self.unrealcv.hide_obj(house)
 
-     self.houses = self.housesA + self.housesB
+     if not self.testSet:
+         # Remove for SetA
+         i = 0
+         remove_numA = [1,4,10,35,48,50] # remove House 50
+         while(1):
+             num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
+             if num in remove_numA:
+                 print('removed', self.housesA.pop(i))
+                 remove_numA.remove(num)
+                 if len(remove_numA) == 0:
+                     break
+             else:
+                 i += 1
+
+         # Remove for B
+         i = 0
+         remove_numB = [3,4,21,45,49,50] # remove House 50
+         while(1):
+             num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
+             if num in remove_numB:
+                 print('removed', self.housesB.pop(i))
+                 remove_numB.remove(num)
+                 if len(remove_numB) == 0:
+                     break
+             else:
+                 i += 1
+
+         # Remove for SetC
+         i = 0
+         remove_numC = [3,11,13,36,43,50] # remove House 50
+         while(1):
+             num = int((self.housesC[i].split('HOUSE')[1]).split('_')[0])
+             if num in remove_numC:
+                 print('removed', self.housesC.pop(i))
+                 remove_numC.remove(num)
+                 if len(remove_numC) == 0:
+                     break
+             else:
+                 i += 1
+
+         # Remove for SetD
+         i = 0
+         remove_numD = [6,21,22,26,30,50] # remove House 50
+         while(1):
+             num = int((self.housesD[i].split('HOUSE')[1]).split('_')[0])
+             if num in remove_numD:
+                 print('removed', self.housesD.pop(i))
+                 remove_numD.remove(num)
+                 if len(remove_numD) == 0:
+                     break
+             else:
+                 i += 1
+
+         # Remove for SetE
+         i = 0
+         remove_numE = [4,10,11,46,48,50] # remove House 50
+         while(1):
+             num = int((self.housesE[i].split('HOUSE')[1]).split('_')[0])
+             if num in remove_numE:
+                 print('removed', self.housesE.pop(i))
+                 remove_numE.remove(num)
+                 if len(remove_numE) == 0:
+                     break
+             else:
+                 i += 1
+
+
+     self.houses = self.housesA + self.housesB + self.housesC + self.housesD + self.housesE
      # display houses
      if self.disp_houses == True:
          print('display houses')
@@ -214,11 +278,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # self.houses.pop()
      # self.houses.pop()
      self.num_house = len(self.houses)
-     print('houses new', self.houses)
+     # print('houses new', self.houses)
      self.house_ids_ordered = list(range(len(self.houses)))
-     print('house_ids_ordered',self.house_ids_ordered)
+     # print('house_ids_ordered',self.house_ids_ordered)
      self.house_ids_shuffle = random.shuffle(self.house_ids_ordered)
-     print(self.house_ids_shuffle)
+     # print(self.house_ids_shuffle)
 
      # self.house
      print('num houses', self.num_house)
@@ -227,28 +291,45 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          self.unrealcv.hide_obj(house)
 
      self.ids = list(range(self.num_house))
-     print('ids', self.ids)
+     # print('ids', self.ids)
      self.shuffle_ids = self.ids.copy()
      random.shuffle(self.shuffle_ids)
-     print('shuffled ids', self.shuffle_ids)
+     # print('shuffled ids', self.shuffle_ids)
      # self.house_id = 40
      if self.test == True:
          self.house_id = -1
-         self.testB_id = 0
+     elif self.testSet == True:
+         self.house_id = -1
          self.testA_id = 0
+         self.testB_id = 0
+         self.testC_id = 0
+         self.testD_id = 0
+         self.testE_id = 0
 
      else:
          self.house_id = random.randint(0, self.num_house-1) # randomize houses
 
-     self.unrealcv.show_obj(self.houses[self.house_id])
+     # self.unrealcv.show_obj(self.houses[self.house_id])
 
      # gt_dir = '/hdd/AIRSCAN/datasets/house38_44_2/groundtruth/'
      # gt_dir = '/hdd/AIRSCAN/datasets/house_10/groundtruth/'
-     gt_dir = '/hdd/AIRSCAN/datasets/house_setA_comp/groundtruth/'
+     # gt_dir = '/hdd/AIRSCAN/datasets/house_setA_comp/groundtruth/'
+     gt_dir = '/hdd/AIRSCAN/datasets/house_BAT6_full/groundtruth/'
      self.gt_pcl = []
      for i in range(len(self.houses)):
          # gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
          gt_fn = gt_dir + self.houses[i].split('_WTR')[0] + '_WTR.ply'
+         # print('gt_fn before: ', gt_fn)
+         if ('SETB' in gt_fn):
+             gt_fn = gt_fn.replace('SETB', 'SETA')
+         elif ('SETC' in gt_fn):
+             gt_fn = gt_fn.replace('SETC', 'SETA')
+         elif ('SETD' in gt_fn):
+             gt_fn = gt_fn.replace('SETD', 'SETA')
+         elif ('SETE' in gt_fn):
+             gt_fn = gt_fn.replace('SETE', 'SETA')
+         # print('gt_fn after: ', gt_fn)
+
          # print('gt', gt_fn)
          gt_pcl = pcl.load(gt_fn)
          # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
@@ -360,54 +441,107 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                self.unrealcv.hide_obj(house)
            if self.test == True:
                self.house_id += 1
+
+               print('Testing House: ', self.houses[self.house_id])
+
+               print(self.house_id)
+               print('house id', self.house_id)
+               self.unrealcv.show_obj(self.houses[self.house_id])
+           elif self.testSet == True:
+               # self.house_id += 1
                #8 'dont use'
                # self.house_id = 41
                # self.house_id = 70
                # Add extracting house id's from a list of house numbers
-               # testB = [3,4,21,45,49]
-               # i = 0
-               # while(1):
-               #     num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
-               #     if num == testB[self.testB_id]:
-               #         # print('removed', self.housesB.pop(i))
-               #
-               #         self.house_id = i
-               #         self.testB_id += 1
-               #         break
-               #         # remove_numB.remove(num)
-               #         # if len(remove_numB) == 0:
-               #         #     break
-               #        # else:
-               #        #     i = 0
-               #     else:
-               #        i += 1
 
-               # testA = [3,4,21,45,49]
-               testA = [1,4,10,35,48]
-               i = 0
-               while(1):
-                   num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
-                   if num == testA[self.testA_id]:
-                       # print('removed', self.housesB.pop(i))
+               if self.testSetA == True:
+                   # testA = [3,4,21,45,49]
+                   testA = [1,4,10,35,48]
+                   i = 0
+                   while(1):
+                       num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
+                       if num == testA[self.testA_id]:
+                           # print('removed', self.housesB.pop(i))
 
-                       self.house_id = i
-                       self.testA_id += 1
-                       break
-                       # remove_numB.remove(num)
-                       # if len(remove_numB) == 0:
-                       #     break
-                      # else:
-                      #     i = 0
-                   else:
-                      i += 1
+                           self.house_id = i
+                           self.testA_id += 1
+                           break
 
-               # print('Testing House: ', self.housesB[self.house_id])
-               print('Testing House: ', self.housesA[self.house_id])
+                       else:
+                          i += 1
+                   print('Testing House: ', self.housesA[self.house_id])
+                   self.unrealcv.show_obj(self.housesA[self.house_id])
+               elif self.testSetB == True:
 
-               print(self.house_id)
-               print('house id', self.house_id)
-               # self.unrealcv.show_obj(self.housesB[self.house_id])
-               self.unrealcv.show_obj(self.housesA[self.house_id])
+                   testB = [3,4,21,45,49]
+                   i = 0
+                   while(1):
+                       num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
+                       if num == testB[self.testB_id]:
+                           # print('removed', self.housesB.pop(i))
+
+                           self.house_id = i
+                           self.testB_id += 1
+                           break
+
+                       else:
+                          i += 1
+                   print('house id', self.house_id)
+
+                   print('Testing House: ', self.housesB[self.house_id])
+                   print('Using: ', self.houses[self.house_id])
+                   self.unrealcv.show_obj(self.housesB[self.house_id])
+
+               elif self.testSetC == True:
+                   testC = [3,11,13,36,43]
+                   i = 0
+                   while(1):
+                       num = int((self.housesC[i].split('HOUSE')[1]).split('_')[0])
+                       if num == testC[self.testC_id]:
+                           # print('removed', self.housesB.pop(i))
+
+                           self.house_id = i
+                           self.testC_id += 1
+                           break
+
+                       else:
+                          i += 1
+                   print('Testing House: ', self.housesC[self.house_id])
+                   self.unrealcv.show_obj(self.housesC[self.house_id])
+
+               elif self.testSetD == True:
+                   testD = [6,21,22,26,30]
+                   i = 0
+                   while(1):
+                       num = int((self.housesD[i].split('HOUSE')[1]).split('_')[0])
+                       if num == testD[self.testD_id]:
+                           # print('removed', self.housesB.pop(i))
+
+                           self.house_id = i
+                           self.testD_id += 1
+                           break
+
+                       else:
+                          i += 1
+                   print('Testing House: ', self.housesD[self.house_id])
+                   self.unrealcv.show_obj(self.housesD[self.house_id])
+
+               elif self.testSetE == True:
+                   testE = [4,10,11,46,48]
+                   i = 0
+                   while(1):
+                       num = int((self.housesE[i].split('HOUSE')[1]).split('_')[0])
+                       if num == testE[self.testE_id]:
+                           # print('removed', self.housesB.pop(i))
+
+                           self.house_id = i
+                           self.testE_id += 1
+                           break
+                       else:
+                          i += 1
+                   print('Testing House: ', self.housesE[self.house_id])
+                   self.unrealcv.show_obj(self.housesE[self.house_id])
+
            else:
                # self.house_id = random.randint(0, self.num_house-1) # randomize houses
                # self.house_id = 39 #House 46
@@ -470,7 +604,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
 
        # print("Depth Fusion time: ", depth_end - depth_start)
-       if self.test == True:
+       if self.test or self.testSet:
            print('coverage: ', cd)
        if cd > 96.0:
        # if cd > 50.0:
@@ -489,7 +623,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        self.cd_old = cd
        self.total_distance += move_dist
-       if (self.test == True) and (self.count_house_frames == 50):
+       if ((self.test == True) or (self.testSet)) and (self.count_house_frames == 50):
            done = True
        # print('total distance: ', self.total_distance)
        return reward, done
