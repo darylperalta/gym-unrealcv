@@ -217,9 +217,11 @@ def depth_fusion_mult(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', o
     from pycuda.compiler import SourceModule
     gpu_dev = cuda.Device(0)
     # print('Max Threads Per Block', gpu_dev.MAX_THREADS_PER_BLOCK)
-
-
-
+    # print('log ', data_path)
+    # print('cam k', cam_K_file)
+    # print('output pts ', output_pts)
+    # print('house id ', house_id)
+    # print('num frames ', num_frames)
     mod = SourceModule("""
         __global__ void Integrate(float * cam_K, float * cam2base, float * depth_im,
                        int im_height, int im_width, int voxel_grid_dim_x, int voxel_grid_dim_y, int voxel_grid_dim_z,
@@ -273,7 +275,7 @@ def depth_fusion_mult(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', o
           }
         }
 
-        """)
+        """, arch='sm_60')
 
     im_width = 640
     im_height = 480
@@ -326,16 +328,12 @@ def depth_fusion_mult(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', o
     voxel_grid_origin_y = -1.0
     voxel_grid_origin_z = -1.0
     voxel_size = 0.01
-    # voxel_grid_dim_x = 200
-    # voxel_grid_dim_y = 200
-    # voxel_grid_dim_z = 200
-    voxel_grid_dim_x = 180
-    voxel_grid_dim_y = 180
-    voxel_grid_dim_z = 180
-    # voxel_size = 0.006
-    # voxel_grid_dim_x = 500
-    # voxel_grid_dim_y = 500
-    # voxel_grid_dim_z = 500
+    voxel_grid_dim_x = 200
+    voxel_grid_dim_y = 200
+    voxel_grid_dim_z = 200
+    # voxel_grid_dim_x = 180
+    # voxel_grid_dim_y = 180
+    # voxel_grid_dim_z = 180
 
 
     '''read camera intrinsics'''
