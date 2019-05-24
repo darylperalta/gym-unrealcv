@@ -116,16 +116,20 @@ class UnrealCv(object):
 
             return image
 
-    def read_depth(self, cam_id):
+    def read_depth(self, cam_id, mode='depthFusion'):
         cmd = 'vget /camera/{cam_id}/depth npy'
         res = self.client.request(cmd.format(cam_id=cam_id))
 
         #depth = np.load(StringIO.StringIO(res))
         depth = np.load(BytesIO(res))
-        depth[depth>100.0] = 0
+
         #self.show_img(depth,'depth')
         #return depth
-        return np.expand_dims(depth,axis=-1)
+        if mode == "depthFusion":
+            return depth
+        else:
+            depth[depth>100.0] = 0
+            return np.expand_dims(depth,axis=-1)
 
     def read_png(self,res):
         #img = PIL.Image.open(StringIO.StringIO(res))
@@ -233,6 +237,37 @@ class UnrealCv(object):
         else:
             return True
 
+    def move_3d(self,cam_id, yaw, pitch, length):
+
+        # print('type yaw', yaw.dtype)
+
+        yaw_exp = (self.cam[cam_id]['rotation'][1] + yaw) % 360
+        pitch_exp = (self.cam[cam_id]['rotation'][2] + pitch) % 360
+
+        delt_x = length * math.cos(pitch_exp / 180.0 * math.pi) * math.cos(yaw_exp / 180.0 * math.pi)
+        delt_y = length * math.cos(pitch_exp / 180.0 * math.pi) * math.sin(yaw_exp / 180.0 * math.pi)
+        delt_z = length * math.sin(pitch_exp / 180.0 * math.pi)
+
+        location_now = self.cam[cam_id]['location']
+        location_exp = [(location_now[0] + delt_x).astype(np.float16), (location_now[1]+delt_y).astype(np.float16),(location_now[2] + delt_z).astype(np.float16)]
+        # location_exp = [x.astype(np.float16), y.astype(np.float16),z.astype(np.float16)]
+        # print('delta loc', delt_x, delt_y, delt_z)
+        # print('location exp', location_exp)
+
+        self.moveto(cam_id, location_exp)
+
+        if ((yaw != 0) or (pitch != 0)) :
+
+            self.set_rotation(cam_id, [0, yaw_exp, pitch_exp])
+
+        location_now = self.get_location(cam_id)
+        error = self.error_position(location_now, location_exp)
+        # print('location now', location_now)
+
+        if (error < 10):
+            return False
+        else:
+            return True
 
 
     def move_rel(self,cam_id, azimuth, elevation,distance):
@@ -258,15 +293,24 @@ class UnrealCv(object):
         # x = distance*sin(radians(p-elevation))*cos(radians(azimuth))
         # y = distance*sin(radians(p-elevation))*sin(radians(azimuth))
         y = distance*sin(radians(p-elevation))*cos(radians(azimuth))
+        # print('y', type(y))
+        # print(y)
+        # if y < 0.001:
+            # y =np.array([0.0])
         x = distance*sin(radians(p-elevation))*sin(radians(azimuth))
 
         z = distance*cos(radians(p-elevation))
+        # x = np.array([100.0])
+        # y =np.array([700.0])
+        # z =np.array([400.0])
         # location_exp = [location_now[0] + delt_x, location_now[1]+delt_y,location_now[2]]
         location_exp = [x.astype(np.float16), y.astype(np.float16),z.astype(np.float16)]
+        # location_exp = [x, y,z]
         # print('location type: ',type(location_exp))
         # print('x type: ', type(x))
 
         # print('azimuth, elevation, distance: ', azimuth,elevation, distance)
+        # print('location: ',location_exp)
         # print('location: ', location_exp.dtype)
         # print('rotation: ',[0, yaw_exp.astype(np.float16), pitch.astype(np.float16)])
         self.moveto(cam_id, location_exp)
@@ -290,6 +334,58 @@ class UnrealCv(object):
         else:
             return True, move_dist
 
+    def move_rel2(self,cam_id, azimuth, elevation,distance):
+        #returns collision and distance travelled
+
+
+        # yaw_exp = (self.cam[cam_id]['rotation'][1] + angle) % 360
+        p=90
+        # yaw_exp = azimuth
+        yaw_exp = 270 -azimuth
+        # pitch = p-elevation
+        # pitch = -1*pitch
+        pitch = -1*elevation
+        # delt_x = length * math.cos(yaw_exp / 180.0 * math.pi)
+        # delt_y = length * math.sin(yaw_exp / 180.0 * math.pi)
+        location_init = self.cam[cam_id]['location']
+
+        location_now = self.cam[cam_id]['location']
+
+
+        y = distance*sin(radians(p-elevation))*cos(radians(azimuth))
+
+        x = distance*sin(radians(p-elevation))*sin(radians(azimuth))
+
+        z = distance*cos(radians(p-elevation))
+
+        # location_exp = [x.astype(np.float16), y.astype(np.float16),z.astype(np.float16)]
+        location_exp = np.array([x.astype(np.float16), y.astype(np.float16),z.astype(np.float16)])
+        # print('location: ', location_exp)
+        location_exp[np.abs(location_exp) < 0.00090] = 0.0
+        self.moveto(cam_id, location_exp)
+        # print('location: ', location_exp)
+        # print(type(yaw_exp))
+        # print('yaw', yaw_exp)
+        # print('pitch', pitch)
+        if (np.abs(yaw_exp) < 0.0090):
+            yaw_exp = 0.0
+        if (np.abs(pitch) < 0.0090):
+            pitch = 0.0
+        # if angle != 0 :
+        self.set_rotation(cam_id, [0, yaw_exp, pitch])
+        # self.set_rotation(cam_id, [0, pitch, yaw_exp)
+
+        location_now = self.get_location(cam_id)
+        rotation_now = self.get_rotation(cam_id)
+        error = self.error_position(location_now, location_exp)
+
+
+        move_dist = np.sqrt(np.square(location_exp[2]-location_init[2])+np.square(location_exp[1]-location_init[1])+np.square(location_exp[0]-location_init[0]))
+
+        if (error < 10):
+            return False, move_dist
+        else:
+            return True, move_dist
 
 
     def error_position(self,pos_now,pos_exp):
