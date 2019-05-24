@@ -697,8 +697,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        if self.test or self.testSet:
            print('coverage: ', cd)
        # if cd > 94.0:
-       if cd > 100.5:
-       # if cd > 96.0:
+       # if cd > 100.5:
+       if cd > 96.0:
            done = True
            reward = 100
 
@@ -713,6 +713,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        if ((self.test == True) or (self.testSet)) and (self.count_house_frames == 50):
            done = True
        elif (self.test_baseline) and (self.count_house_frames == 27):
+           print('unsolved')
            done = True
 
        # print('total distance: ', self.total_distance)
