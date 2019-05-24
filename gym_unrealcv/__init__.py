@@ -649,7 +649,22 @@ register(
 register(
     id='DepthFusionBGrayMultHouseRand-v0',
     entry_point='gym_unrealcv.envs:depthFusion_keras_multHouse_rand',
-    kwargs = {'setting_file' : 'depth_fusionB_keras_multHouse_rand12.json',
+    kwargs = {'setting_file' : 'depth_fusionB_keras_multHouse_rand_setA.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'discrete',
+              'observation_type': 'gray',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='Bunny-v0',
+    entry_point='gym_unrealcv.envs:depthFusion_keras_multHouse_rand',
+    kwargs = {'setting_file' : 'bunny.json',
               'reset_type' : 'waypoint',
               'test': False,
               'action_type' : 'discrete',
