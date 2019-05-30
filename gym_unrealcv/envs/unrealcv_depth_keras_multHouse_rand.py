@@ -38,7 +38,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 resolution = (640,480),
                 log_dir='log/'
     ):
-     self.test = False
+     self.test = True
      # self.test = True
      self.testSet = False
      self.testSetA = False
@@ -52,7 +52,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.batch2 = False
      self.batch8 = True
      self.bunny = False
-     self.test_baseline = False
+     self.test_baseline = True
+     self.unsolved_ctr = 0
+     self.unsolved_list = []
 
      self.save_pcd = False
      self.disp_houses = True
@@ -296,6 +298,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
      if not self.bunny:
          self.houses = self.housesA + self.housesB + self.housesC + self.housesD + self.housesE
+         self.houses = self.housesA[0:4]
      # display houses
      if self.disp_houses == True:
          print('display houses')
@@ -490,11 +493,18 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            if self.test == True:
                self.house_id += 1
 
+               if self.house_id >= len(self.houses):
+                   print('No. of unsolved houses:', self.unsolved_ctr)
+                   print('Unsolved Houses')
+                   for unsolved_id in range(len(self.unsolved_list)):
+                       print(self.houses[unsolved_id])
+
                print('Testing House: ', self.houses[self.house_id])
 
                print(self.house_id)
                print('house id', self.house_id)
                self.unrealcv.show_obj(self.houses[self.house_id])
+
            elif self.testSet == True:
                # self.house_id += 1
                #8 'dont use'
@@ -711,9 +721,13 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        self.cd_old = cd
        self.total_distance += move_dist
        if ((self.test == True) or (self.testSet)) and (self.count_house_frames == 50):
+           self.unsolved_ctr += 1
+           self.unsolved_list.append(self.house_id)
            done = True
        elif (self.test_baseline) and (self.count_house_frames == 27):
            print('unsolved')
+           self.unsolved_ctr += 1
+           self.unsolved_list.append(self.house_id)
            done = True
 
        # print('total distance: ', self.total_distance)
