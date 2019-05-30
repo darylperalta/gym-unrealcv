@@ -38,16 +38,17 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 resolution = (640,480),
                 log_dir='log/'
     ):
-     self.test = True
+     self.test = False
      # self.test = True
-     self.testSet = False
-     self.testSetA = False
+     self.testSet = True
+     self.testSetA = True
      self.testSetB = False
      self.testSetC = False
      self.testSetD = False
      self.testSetE = False
      self.batch7 = False
      self.batch1 = False
+     self.batch4 = False
      self.batch3 = False
      self.batch2 = False
      self.batch8 = True
@@ -57,7 +58,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.unsolved_list = []
 
      self.save_pcd = False
-     self.disp_houses = True
+     self.disp_houses = False
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0
      # self.reset_type = 'random'
@@ -225,6 +226,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
              remove_numC = [8, 14, 16, 31, 50]
              remove_numD = [1, 12, 14, 38, 41]
              remove_numE = [2, 22, 28, 30, 43]
+         elif self.batch4:
+             remove_numA = [1,14,18,32,42]
+             remove_numB = [2,3,32,11,13]
+             remove_numC = [5,9,22,34,46]
+             remove_numD = [5,7,10,13,22]
+             remove_numE = [7,22,24,32,34]
          else:
              remove_numA = [1,4,10,35,48,50] # remove House 50
              remove_numB = [3,4,21,45,49,50] # remove House 50
@@ -243,7 +250,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                      break
              else:
                  i += 1
-
          # Remove for B
          i = 0
 
@@ -256,7 +262,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                      break
              else:
                  i += 1
-
          # Remove for SetC
          i = 0
 
@@ -269,7 +274,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                      break
              else:
                  i += 1
-
          # Remove for SetD
          i = 0
 
@@ -282,7 +286,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                      break
              else:
                  i += 1
-
          # Remove for SetE
          i = 0
 
@@ -298,7 +301,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
      if not self.bunny:
          self.houses = self.housesA + self.housesB + self.housesC + self.housesD + self.housesE
-         self.houses = self.housesA[0:4]
      # display houses
      if self.disp_houses == True:
          print('display houses')
@@ -346,19 +348,28 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # gt_dir = '/hdd/AIRSCAN/datasets/house_setA_comp/groundtruth/'
      if self.batch8 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT8_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT8_full/groundtruth/'
      elif self.batch7 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT7_full/groundtruth/'
+     elif self.batch4 == True:
+         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT4_full/groundtruth/'
      elif self.batch3 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT3_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT3_full/groundtruth/'
      elif self.batch2 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT2_full/groundtruth/'
-         print('gt dir', gt_dir)
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT2_full/groundtruth/'
      elif self.batch1 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT1_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT1_full/groundtruth/'
      elif self.bunny == True:
          gt_dir = '/home/daryl/datasets/bunny/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/bunny/groundtruth/'
      else:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT6_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT6_full/groundtruth/'
 
      self.gt_pcl = []
      for i in range(len(self.houses)):
@@ -518,12 +529,15 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testA = [8,18,19,49]
                    elif self.batch8 == True:
                        testA =  [4, 11, 15, 22, 48]
+                       testA =  [4, 11]
                    elif self.batch1 == True:
                        testA = [1,16,19,35,36]
                    elif self.batch2 == True:
                        testA = [6,10,25,35,38]
                    elif self.batch3 == True:
                        testA = [7,20,22,29,50]
+                   elif self.batch4 == True:
+                       testA = [1,14,18,32,42]
                    else:
                        testA = [1,4,10,35,48]
                    i = 0
@@ -535,6 +549,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
+                   if self.testA_id >= len(testA):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in range(len(self.unsolved_list)):
+                           print(self.housesA[unsolved_id])
+
                    print('Testing House: ', self.housesA[self.house_id])
                    self.unrealcv.show_obj(self.housesA[self.house_id])
 
@@ -549,6 +569,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testB = [9,11,20,28,43]
                    elif self.batch3 == True:
                        testB = [2,24,36,43,49]
+                   elif self.batch4 == True:
+                       testB = [2,3,32,11,13]
                    else:
                        testB = [3,4,21,45,49]
                    i = 0
@@ -560,6 +582,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
+                   if self.testB_id >= len(testB):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in range(len(self.unsolved_list)):
+                           print(self.housesB[unsolved_id])
                    print('house id', self.house_id)
                    print('Testing House: ', self.housesB[self.house_id])
                    print('Using: ', self.houses[self.house_id])
@@ -576,6 +603,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testC = [12,14,21,35,40]
                    elif self.batch3 == True:
                        testC = [2,4,10,29,35]
+                   elif self.batch4 == True:
+                       testC = [5,9,22,34,46]
                    else:
                        testC = [3,11,13,36,43]
                    i = 0
@@ -585,9 +614,14 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            self.house_id = i
                            self.testC_id += 1
                            break
-
                        else:
                           i += 1
+                   if self.testC_id >= len(testC):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in range(len(self.unsolved_list)):
+                           print(self.housesC[unsolved_id])
+
                    print('Testing House: ', self.housesC[self.house_id])
                    self.unrealcv.show_obj(self.housesC[self.house_id])
 
@@ -602,6 +636,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testD = [3,10,11,37,42]
                    elif self.batch3 == True:
                        testD = [4,22,24,30,36]
+                   elif self.batch4 == True:
+                       testD = [5,7,10,13,22]
                    else:
                        testD = [6,21,22,26,30]
                    i = 0
@@ -613,6 +649,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
+                   if self.testD_id >= len(testD):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in range(len(self.unsolved_list)):
+                           print(self.housesD[unsolved_id])
                    print('Testing House: ', self.housesD[self.house_id])
                    self.unrealcv.show_obj(self.housesD[self.house_id])
 
@@ -627,6 +668,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testE = [3,5,19,31,40]
                    elif self.batch3 == True:
                        testE = [13,14,21,33,34]
+                   elif self.batch4 == True:
+                       testE = [7,22,24,32,34]
                    else:
                        testE = [4,10,11,46,48]
                    i = 0
@@ -639,6 +682,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
+                   if self.testE_id >= len(testE):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in range(len(self.unsolved_list)):
+                           print(self.housesE[unsolved_id])
                    print('Testing House: ', self.housesE[self.house_id])
                    self.unrealcv.show_obj(self.housesE[self.house_id])
 
@@ -725,7 +773,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            self.unsolved_list.append(self.house_id)
            done = True
        elif (self.test_baseline) and (self.count_house_frames == 27):
-           print('unsolved')
+           print('UNSOLVED')
            self.unsolved_ctr += 1
            self.unsolved_list.append(self.house_id)
            done = True
