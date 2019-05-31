@@ -40,20 +40,20 @@ class depthFusion_keras_multHouse_rand(gym.Env):
     ):
      self.test = False
      # self.test = True
-     self.testSet = True
-     self.testSetA = True
+     self.testSet = False
+     self.testSetA = False
      self.testSetB = False
      self.testSetC = False
      self.testSetD = False
      self.testSetE = False
      self.batch7 = False
      self.batch1 = False
-     self.batch4 = False
+     self.batch4 = True
      self.batch3 = False
      self.batch2 = False
-     self.batch8 = True
+     self.batch8 = False
      self.bunny = False
-     self.test_baseline = True
+     self.test_baseline = False
      self.unsolved_ctr = 0
      self.unsolved_list = []
 
@@ -155,6 +155,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          self.housesC = [(obj) for obj in objects if obj.startswith('BAT3_SETC')]
          self.housesD = [(obj) for obj in objects if obj.startswith('BAT3_SETD')]
          self.housesE = [(obj) for obj in objects if obj.startswith('BAT3_SETE')]
+     elif self.batch4:
+         self.housesA = [(obj) for obj in objects if obj.startswith('BAT4_SETA')]
+         self.housesB = [(obj) for obj in objects if obj.startswith('BAT4_SETB')]
+         self.housesC = [(obj) for obj in objects if obj.startswith('BAT4_SETC')]
+         self.housesD = [(obj) for obj in objects if obj.startswith('BAT4_SETD')]
+         self.housesE = [(obj) for obj in objects if obj.startswith('BAT4_SETE')]
      elif self.batch8:
          self.housesA = [(obj) for obj in objects if obj.startswith('BAT8_SETA')]
          self.housesB = [(obj) for obj in objects if obj.startswith('BAT8_SETB')]
@@ -170,17 +176,17 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          self.housesD = [(obj) for obj in objects if obj.startswith('BAT6_SETD')]
          self.housesE = [(obj) for obj in objects if obj.startswith('BAT6_SETE')]
      if not self.bunny:
-         print('A', self.housesA)
-         self.housesA.sort()
-         print('B', self.housesB)
-         self.housesB.sort()
-         print('B sorted', self.housesB)
-         self.housesC.sort()
-         print('C', self.housesC)
-         self.housesD.sort()
-         print('D', self.housesD)
-         self.housesE.sort()
-         print('E', self.housesE)
+         # print('A', self.housesA)
+         # self.housesA.sort()
+         # print('B', self.housesB)
+         # self.housesB.sort()
+         # print('B sorted', self.housesB)
+         # self.housesC.sort()
+         # print('C', self.housesC)
+         # self.housesD.sort()
+         # print('D', self.housesD)
+         # self.housesE.sort()
+         # print('E', self.housesE)
 
          # hide houses
          for house in self.housesA:
@@ -376,7 +382,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          # gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
          if self.bunny:
              gt_fn = gt_dir + self.houses[i].split('_2')[0] + '_rotate.ply'
-         elif not (self.batch1 or self.batch2 or self.batch3 or self.batch8):
+         elif not (self.batch1 or self.batch2 or self.batch3 or self.batch4 or self.batch8):
              gt_fn = gt_dir + self.houses[i].split('_WTR')[0] + '_WTR.ply'
          else:
              gt_fn = gt_dir + self.houses[i].split('_')[0]+'_'+self.houses[i].split('_')[1]+'_'+self.houses[i].split('_')[2]+ '.ply'
@@ -529,7 +535,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testA = [8,18,19,49]
                    elif self.batch8 == True:
                        testA =  [4, 11, 15, 22, 48]
-                       testA =  [4, 11]
                    elif self.batch1 == True:
                        testA = [1,16,19,35,36]
                    elif self.batch2 == True:
