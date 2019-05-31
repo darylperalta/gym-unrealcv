@@ -48,7 +48,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.testSetE = False
      self.batch7 = False
      self.batch1 = False
-     self.batch4 = True
+     self.batch5 = True
+     self.batch4 = False
      self.batch3 = False
      self.batch2 = False
      self.batch8 = False
@@ -161,6 +162,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          self.housesC = [(obj) for obj in objects if obj.startswith('BAT4_SETC')]
          self.housesD = [(obj) for obj in objects if obj.startswith('BAT4_SETD')]
          self.housesE = [(obj) for obj in objects if obj.startswith('BAT4_SETE')]
+     elif self.batch5:
+         self.housesA = [(obj) for obj in objects if obj.startswith('BAT5_SETA')]
+         self.housesB = [(obj) for obj in objects if obj.startswith('BAT5_SETB')]
+         self.housesC = [(obj) for obj in objects if obj.startswith('BAT5_SETC')]
+         self.housesD = [(obj) for obj in objects if obj.startswith('BAT5_SETD')]
+         self.housesE = [(obj) for obj in objects if obj.startswith('BAT5_SETE')]
      elif self.batch8:
          self.housesA = [(obj) for obj in objects if obj.startswith('BAT8_SETA')]
          self.housesB = [(obj) for obj in objects if obj.startswith('BAT8_SETB')]
@@ -238,6 +245,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
              remove_numC = [5,9,22,34,46]
              remove_numD = [5,7,10,13,22]
              remove_numE = [7,22,24,32,34]
+         elif self.batch5:
+             remove_numA = [3,20,32,46,48]
+             remove_numB = [8,40,42,46,48]
+             remove_numC = [7,19,24,34,39]
+             remove_numD = [1,11,34,38,48]
+             remove_numE = [13,34,39,40,43]
          else:
              remove_numA = [1,4,10,35,48,50] # remove House 50
              remove_numB = [3,4,21,45,49,50] # remove House 50
@@ -358,6 +371,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      elif self.batch7 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT7_full/groundtruth/'
+     elif self.batch5 == True:
+         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT5_full/groundtruth/'
+         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT5_full/groundtruth/'
      elif self.batch4 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT4_full/groundtruth/'
@@ -382,7 +398,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          # gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
          if self.bunny:
              gt_fn = gt_dir + self.houses[i].split('_2')[0] + '_rotate.ply'
-         elif not (self.batch1 or self.batch2 or self.batch3 or self.batch4 or self.batch8):
+         elif not (self.batch1 or self.batch2 or self.batch3 or self.batch4 or self.batch5 or self.batch8):
              gt_fn = gt_dir + self.houses[i].split('_WTR')[0] + '_WTR.ply'
          else:
              gt_fn = gt_dir + self.houses[i].split('_')[0]+'_'+self.houses[i].split('_')[1]+'_'+self.houses[i].split('_')[2]+ '.ply'
@@ -543,6 +559,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testA = [7,20,22,29,50]
                    elif self.batch4 == True:
                        testA = [1,14,18,32,42]
+                   elif self.batch5 == True:
+                       testA = [3,20,32,46,48]
                    else:
                        testA = [1,4,10,35,48]
                    i = 0
@@ -576,6 +594,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testB = [2,24,36,43,49]
                    elif self.batch4 == True:
                        testB = [2,3,32,11,13]
+                   elif self.batch5 == True:
+                       testB = [8,40,42,46,48]
+
                    else:
                        testB = [3,4,21,45,49]
                    i = 0
@@ -610,6 +631,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testC = [2,4,10,29,35]
                    elif self.batch4 == True:
                        testC = [5,9,22,34,46]
+                   elif self.batch5 == True:
+                       testC = [7,19,24,34,39]
+
                    else:
                        testC = [3,11,13,36,43]
                    i = 0
@@ -643,6 +667,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testD = [4,22,24,30,36]
                    elif self.batch4 == True:
                        testD = [5,7,10,13,22]
+                   elif self.batch5 == True:
+                       testD = [1,11,34,38,48]
                    else:
                        testD = [6,21,22,26,30]
                    i = 0
@@ -675,6 +701,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testE = [13,14,21,33,34]
                    elif self.batch4 == True:
                        testE = [7,22,24,32,34]
+                   elif self.batch5 == True:
+                       testE = [13,34,39,40,43]
                    else:
                        testE = [4,10,11,46,48]
                    i = 0
