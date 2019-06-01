@@ -40,21 +40,22 @@ class depthFusion_keras_multHouse_rand(gym.Env):
     ):
      self.test = False
      # self.test = True
-     self.testSet = False
-     self.testSetA = False
-     self.testSetB = False
-     self.testSetC = False
-     self.testSetD = False
-     self.testSetE = False
+     self.testSet = True
+     self.test_all= True
+     self.testSetA = True
+     self.testSetB = True
+     self.testSetC = True
+     self.testSetD = True
+     self.testSetE = True
      self.batch7 = False
      self.batch1 = False
-     self.batch5 = True
-     self.batch4 = False
+     self.batch5 = False
+     self.batch4 = True
      self.batch3 = False
      self.batch2 = False
      self.batch8 = False
      self.bunny = False
-     self.test_baseline = False
+     self.test_baseline = True
      self.unsolved_ctr = 0
      self.unsolved_list = []
 
@@ -529,7 +530,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                if self.house_id >= len(self.houses):
                    print('No. of unsolved houses:', self.unsolved_ctr)
                    print('Unsolved Houses')
-                   for unsolved_id in range(len(self.unsolved_list)):
+                   for unsolved_id in self.unsolved_list:
                        print(self.houses[unsolved_id])
 
                print('Testing House: ', self.houses[self.house_id])
@@ -563,6 +564,15 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testA = [3,20,32,46,48]
                    else:
                        testA = [1,4,10,35,48]
+
+                   if self.testA_id >= len(testA):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       print('id ', self.testA_id)
+                       print('len ', len(testA))
+                       for unsolved_id in self.unsolved_list:
+                           print(self.housesA[unsolved_id])
+
                    i = 0
                    while(1):
                        num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
@@ -572,11 +582,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
-                   if self.testA_id >= len(testA):
-                       print('No. of unsolved houses:', self.unsolved_ctr)
-                       print('Unsolved Houses')
-                       for unsolved_id in range(len(self.unsolved_list)):
-                           print(self.housesA[unsolved_id])
+                   if self.test_all and (self.testA_id == len(testA)):
+                       self.testSetA = False
 
                    print('Testing House: ', self.housesA[self.house_id])
                    self.unrealcv.show_obj(self.housesA[self.house_id])
@@ -585,7 +592,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                    if self.batch7 == True:
                        testB = [6,7,17,39]
                    elif self.batch8 == True:
-                       testA =   [3, 20, 25, 40, 42]
+                       testB =   [3, 20, 25, 40, 42]
                    elif self.batch1 == True:
                        testB = [6,7,18,29,44]
                    elif self.batch2 == True:
@@ -596,9 +603,15 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testB = [2,3,32,11,13]
                    elif self.batch5 == True:
                        testB = [8,40,42,46,48]
-
                    else:
                        testB = [3,4,21,45,49]
+
+                   if self.testB_id >= len(testB):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in self.unsolved_list:
+                           print(self.housesB[unsolved_id])
+
                    i = 0
                    while(1):
                        num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
@@ -608,11 +621,10 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
-                   if self.testB_id >= len(testB):
-                       print('No. of unsolved houses:', self.unsolved_ctr)
-                       print('Unsolved Houses')
-                       for unsolved_id in range(len(self.unsolved_list)):
-                           print(self.housesB[unsolved_id])
+
+                   if self.test_all and (self.testB_id == len(testB)):
+                       self.testSetB = False
+
                    print('house id', self.house_id)
                    print('Testing House: ', self.housesB[self.house_id])
                    print('Using: ', self.houses[self.house_id])
@@ -633,9 +645,15 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                        testC = [5,9,22,34,46]
                    elif self.batch5 == True:
                        testC = [7,19,24,34,39]
-
                    else:
                        testC = [3,11,13,36,43]
+
+                   if self.testC_id >= len(testC):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in self.unsolved_list:
+                           print(self.housesC[unsolved_id])
+
                    i = 0
                    while(1):
                        num = int((self.housesC[i].split('HOUSE')[1]).split('_')[0])
@@ -645,12 +663,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
-                   if self.testC_id >= len(testC):
-                       print('No. of unsolved houses:', self.unsolved_ctr)
-                       print('Unsolved Houses')
-                       for unsolved_id in range(len(self.unsolved_list)):
-                           print(self.housesC[unsolved_id])
 
+                   if self.test_all and (self.testC_id == len(testC)):
+                       self.testSetC = False
                    print('Testing House: ', self.housesC[self.house_id])
                    self.unrealcv.show_obj(self.housesC[self.house_id])
 
@@ -672,6 +687,13 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                    else:
                        testD = [6,21,22,26,30]
                    i = 0
+
+                   if self.testD_id >= len(testD):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in self.unsolved_list:
+                           print(self.housesD[unsolved_id])
+
                    while(1):
                        num = int((self.housesD[i].split('HOUSE')[1]).split('_')[0])
                        if num == testD[self.testD_id]:
@@ -680,11 +702,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
-                   if self.testD_id >= len(testD):
-                       print('No. of unsolved houses:', self.unsolved_ctr)
-                       print('Unsolved Houses')
-                       for unsolved_id in range(len(self.unsolved_list)):
-                           print(self.housesD[unsolved_id])
+                   if self.test_all and (self.testD_id == len(testD)):
+                       self.testSetD = False
                    print('Testing House: ', self.housesD[self.house_id])
                    self.unrealcv.show_obj(self.housesD[self.house_id])
 
@@ -706,6 +725,15 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                    else:
                        testE = [4,10,11,46,48]
                    i = 0
+                   if self.test_all and (self.testE_id == len(testE)):
+                       print('Test all')
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                   elif self.testE_id >= len(testE):
+                       print('No. of unsolved houses:', self.unsolved_ctr)
+                       print('Unsolved Houses')
+                       for unsolved_id in self.unsolved_list:
+                           print(self.housesE[unsolved_id])
+
                    while(1):
                        num = int((self.housesE[i].split('HOUSE')[1]).split('_')[0])
                        if num == testE[self.testE_id]:
@@ -715,11 +743,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                            break
                        else:
                           i += 1
-                   if self.testE_id >= len(testE):
-                       print('No. of unsolved houses:', self.unsolved_ctr)
-                       print('Unsolved Houses')
-                       for unsolved_id in range(len(self.unsolved_list)):
-                           print(self.housesE[unsolved_id])
+
+                   #     self.testSetE = False
                    print('Testing House: ', self.housesE[self.house_id])
                    self.unrealcv.show_obj(self.housesE[self.house_id])
 
@@ -785,8 +810,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        # print('coverage: ', cd)
        # print("Depth Fusion time: ", depth_end - depth_start)
-       if self.test or self.testSet:
-           print('coverage: ', cd)
+       # if self.test or self.testSet:
+       #     print('coverage: ', cd)
        # if cd > 94.0:
        # if cd > 100.5:
        if cd > 96.0:
@@ -805,7 +830,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            self.unsolved_ctr += 1
            self.unsolved_list.append(self.house_id)
            done = True
-       elif (self.test_baseline) and (self.count_house_frames == 27):
+       elif (self.test_baseline) and (self.count_house_frames == 2):
            print('UNSOLVED')
            self.unsolved_ctr += 1
            self.unsolved_list.append(self.house_id)
