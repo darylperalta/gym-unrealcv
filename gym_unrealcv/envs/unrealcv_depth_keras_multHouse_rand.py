@@ -891,7 +891,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            self.unsolved_ctr += 1
            self.unsolved_list.append(self.house_id)
            done = True
-       elif (self.count_house_frames == 27):
+       elif (self.count_house_frames == 50):
            done = True
 
        # print('total distance: ', self.total_distance)
