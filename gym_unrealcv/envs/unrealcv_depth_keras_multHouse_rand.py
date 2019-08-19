@@ -41,7 +41,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 resolution = (640,480),
                 log_dir='log/'
     ):
-     self.test = True
+     self.test = False
      # self.test = True
      self.testSet = False
      self.test_all= False
@@ -56,7 +56,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.batch9 = False
      self.batch8 = False
      self.batch7 = False
-     self.batch5 = True
+     self.batch5 = False
      self.batch4 = False
      self.batch3 = False
      self.batch2 = False
@@ -347,11 +347,18 @@ class depthFusion_keras_multHouse_rand(gym.Env):
              remove_numD = [5, 21, 30, 32, 47]
              remove_numE = [9, 12, 32, 33, 46]
          else:
-             remove_numA = [1,4,10,35,48,50] # remove House 50
-             remove_numB = [3,4,21,45,49,50] # remove House 50
-             remove_numC = [3,11,13,36,43,50] # remove House 50
-             remove_numD = [6,21,22,26,30,50] # remove House 50
-             remove_numE = [4,10,11,46,48,50] # remove House 50
+             if self.new_split:
+                 remove_numA = [19, 30, 37, 38, 45]
+                 remove_numB = [19, 30, 37, 38, 45]
+                 remove_numC = [19, 30, 37, 38, 45]
+                 remove_numD = [19, 30, 37, 38, 45]
+                 remove_numE = [19, 30, 37, 38, 45]
+             else:
+                 remove_numA = [1,4,10,35,48,50] # remove House 50
+                 remove_numB = [3,4,21,45,49,50] # remove House 50
+                 remove_numC = [3,11,13,36,43,50] # remove House 50
+                 remove_numD = [6,21,22,26,30,50] # remove House 50
+                 remove_numE = [4,10,11,46,48,50] # remove House 50
          remove_numA.sort()
          remove_numB.sort()
          remove_numC.sort()
