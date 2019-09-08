@@ -50,10 +50,10 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.testSetC = False
      self.testSetD = False
      self.testSetE = False
-     self.batch12 = True
+     self.batch12 = False
      self.batch11 = False
      self.batch10 = False
-     self.batch9 = False
+     self.batch9 = True
      self.batch8 = False
      self.batch7 = False
      self.batch5 = False
@@ -312,11 +312,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
          elif self.batch7:
              if self.new_split:
-                 remove_numA = [8,18,19,49]
-                 remove_numB = [6,7,17,39]
-                 remove_numC = [3,26,38,39]
-                 remove_numD = [10,21,27,49]
-                 remove_numE = [3,10,23,48]
+                 remove_numA = [3,5,13,19,20]
+                 remove_numB = [3,5,13,19,20]
+                 remove_numC = [3,5,13,19,20]
+                 remove_numD = [3,5,13,19,20]
+                 remove_numE = [3,5,13,19,20]
              else:
                  remove_numA = [8,18,19,49]
                  remove_numB = [6,7,17,39]
@@ -324,23 +324,45 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  remove_numD = [10,21,27,49]
                  remove_numE = [3,10,23,48]
          elif self.batch8:
-             remove_numA = [4, 11, 15, 22, 48]
-             remove_numB = [3, 20, 25, 40, 42]
-             remove_numC = [8, 14, 16, 31, 50]
-             remove_numD = [1, 12, 14, 38, 41]
-             remove_numE = [2, 22, 28, 30, 43]
+             if self.new_split:
+                 remove_numA = [5,14,22,31,40]
+                 remove_numB = [5,14,22,31,40]
+                 remove_numC = [5,14,22,31,40]
+                 remove_numD = [5,14,22,31,40]
+                 remove_numE = [5,14,22,31,40]
+             else:
+                 remove_numA = [4, 11, 15, 22, 48]
+                 remove_numB = [3, 20, 25, 40, 42]
+                 remove_numC = [8, 14, 16, 31, 50]
+                 remove_numD = [1, 12, 14, 38, 41]
+                 remove_numE = [2, 22, 28, 30, 43]
          elif self.batch9:
-             remove_numA = [6, 14, 19, 35, 38]
-             remove_numB = [4, 28, 38, 39, 43]
-             remove_numC = [6, 10, 21, 44, 47]
-             remove_numD = [5, 7, 19, 25, 44]
-             remove_numE = [3, 8, 27, 36, 43]
+             if self.new_split:
+                 remove_numA = [7,12,26,27,50]
+                 remove_numB = [7,12,26,27,50]
+                 remove_numC = [7,12,26,27,50]
+                 remove_numD = [7,12,26,27,50]
+                 remove_numE = [7,12,26,27,50]
+             else:
+                 remove_numA = [6, 14, 19, 35, 38]
+                 remove_numB = [4, 28, 38, 39, 43]
+                 remove_numC = [6, 10, 21, 44, 47]
+                 remove_numD = [5, 7, 19, 25, 44]
+                 remove_numE = [3, 8, 27, 36, 43]
          elif self.batch10:
-             remove_numA = [43, 39, 27, 46, 22]
-             remove_numB = [2, 46, 39, 22, 47]
-             remove_numC = [9, 47, 33, 27, 10]
-             remove_numD = [41, 47, 26, 33, 45]
-             remove_numE = [36, 20, 48, 46, 37]
+             if self.new_split:
+                 remove_numA = [7, 11, 37, 41,45]
+                 remove_numB = [7, 11, 37, 41,45]
+                 remove_numC = [7, 11, 37, 41,45]
+                 remove_numD = [7, 11, 37, 41,45]
+                 remove_numE = [7, 11, 37, 41,45]
+
+             else:
+                 remove_numA = [43, 39, 27, 46, 22]
+                 remove_numB = [2, 46, 39, 22, 47]
+                 remove_numC = [9, 47, 33, 27, 10]
+                 remove_numD = [41, 47, 26, 33, 45]
+                 remove_numE = [36, 20, 48, 46, 37]
          elif self.batch11:
              if self.new_split:
                  remove_numA = [7,11,12,13,18]
@@ -696,17 +718,30 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                if self.testSetA == True:
                    # testA = [3,4,21,45,49]
                    if self.batch7 == True:
-                       testA = [8,18,19,49]
+                       if self.new_split:
+                           testA = [3,5,13,19,20]
+                       else:
+                           testA = [8,18,19,49]
                        # testA = [8]
                    elif self.batch8 == True:
-                       testA =  [4, 11, 15, 22, 48]
+                       if self.new_split:
+                           testA = [5,14,22,31,40]
+                       else:
+                           testA =  [4, 11, 15, 22, 48]
                        # testA =  [4]
                    elif self.batch9 == True:
-                       testA =  [6, 14, 19, 35, 38]
-                       testA =  [14]
+                       if self.new_split:
+                           testA = [7,12,26,27,50]
+                       else:
+                           testA =  [6,14,19,35,38]
+
+                       # testA =  [14]
                    elif self.batch10 == True:
-                       testA =  [43, 39, 27, 46, 22]
-                       testA =  [ 46]
+                       if (self.new_split):
+                           testA =  [7, 11, 37, 41,45]
+                       else:
+                           testA =  [43, 39, 27, 46, 22]
+                       # testA =  [ 46]
                    elif self.batch11 == True:
                        if (self.new_split):
                            testA = [7,11,12,13,18]
@@ -781,13 +816,25 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
                elif self.testSetB == True:
                    if self.batch7 == True:
-                       testB = [6,7,17,39]
+                       if self.new_split:
+                           testB = [3,5,13,19,20]
+                       else:
+                           testB = [6,7,17,39]
                    elif self.batch8 == True:
-                       testB = [3, 20, 25, 40, 42]
+                       if self.new_split:
+                           testB = [5,14,22,31,40]
+                       else:
+                           testB = [3, 20, 25, 40, 42]
                    elif self.batch9 == True:
-                       testB = [4, 28, 38, 39, 43]
+                       if self.new_split:
+                           testB = [7,12,26,27,50]
+                       else:
+                           testB = [4, 28, 38, 39, 43]
                    elif self.batch10 == True:
-                       testB = [2, 46, 39, 22, 47]
+                       if (self.new_split):
+                           testB =  [7, 11, 37, 41,45]
+                       else:
+                           testB = [2, 46, 39, 22, 47]
                        # testB = [ 46, 39, 22, 47]
                    elif self.batch11 == True:
                        if (self.new_split):
@@ -863,13 +910,25 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
                elif self.testSetC == True:
                    if self.batch7 ==True:
-                       testC = [3,26,38,39]
+                       if self.new_split:
+                           testC = [3,5,13,19,20]
+                       else:
+                           testC = [3,26,38,39]
                    elif self.batch8 == True:
-                       testC =  [8, 14, 16, 31, 50]
+                       if self.new_split:
+                           testC = [5,14,22,31,40]
+                       else:
+                           testC =  [8, 14, 16, 31, 50]
                    elif self.batch9 == True:
-                       testC =  [6, 10, 21, 44, 47]
+                       if self.new_split:
+                           testC = [7,12,26,27,50]
+                       else:
+                           testC =  [6, 10, 21, 44, 47]
                    elif self.batch10 == True:
-                       testC =  [9, 47, 33, 27, 10]
+                       if (self.new_split):
+                           testC =  [7, 11, 37, 41,45]
+                       else:
+                           testC =  [9, 47, 33, 27, 10]
                    elif self.batch11 == True:
                        if (self.new_split):
                            testC = [7,11,12,13,18]
@@ -936,13 +995,25 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
                elif self.testSetD == True:
                    if self.batch7 == True:
-                       testD = [10,21,27,49]
+                       if self.new_split:
+                           testD = [3,5,13,19,20]
+                       else:
+                           testD = [10,21,27,49]
                    elif self.batch8 == True:
-                       testD = [1, 12, 14, 38, 41]
+                       if self.new_split:
+                           testD = [5,14,22,31,40]
+                       else:
+                           testD = [1, 12, 14, 38, 41]
                    elif self.batch9 == True:
-                       testD = [5, 7, 19, 25, 44]
+                       if self.new_split:
+                           testD = [7,12,26,27,50]
+                       else:
+                           testD = [5, 7, 19, 25, 44]
                    elif self.batch10 == True:
-                       testD = [41, 47, 26, 33, 45]
+                       if (self.new_split):
+                           testD =  [7, 11, 37, 41,45]
+                       else:
+                           testD = [41, 47, 26, 33, 45]
                        # testD = [26]
                    elif self.batch11 == True:
                        if (self.new_split):
@@ -1008,13 +1079,25 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
                elif self.testSetE == True:
                    if self.batch7 == True:
-                       testE = [3,10,23,48]
+                       if self.new_split:
+                           testE = [3,5,13,19,20]
+                       else:
+                           testE = [3,10,23,48]
                    elif self.batch8 == True:
-                       testE = [2, 22, 28, 30, 43]
+                       if self.new_split:
+                           testE = [5,14,22,31,40]
+                       else:
+                           testE = [2, 22, 28, 30, 43]
                    elif self.batch9 == True:
-                       testE = [3, 8, 27, 36, 43]
+                       if self.new_split:
+                           testE = [7,12,26,27,50]
+                       else:
+                           testE = [3, 8, 27, 36, 43]
                    elif self.batch10 == True:
-                       testE = [36, 20, 48, 46, 37]
+                       if (self.new_split):
+                           testE =  [7, 11, 37, 41,45]
+                       else:
+                           testE = [36, 20, 48, 46, 37]
                    elif self.batch11 == True:
                        if (self.new_split):
                            testE = [7,11,12,13,18]
@@ -1149,8 +1232,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        # if self.test or self.testSet:
        #     print('coverage: ', cd)
        # if cd > 94.0:
-       # if cd > 87.0:
-       if cd > 96.0:
+       if cd > 87.0:
+       # if cd > 96.0:
            done = True
            reward = 100
 
