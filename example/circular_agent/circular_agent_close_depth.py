@@ -44,11 +44,6 @@ if __name__ == '__main__':
     num_views = 16
     num_views = 34
     num_first_elev = 8
-    # num_views = 26
-    # num_first_elev = 13
-
-    # num_views = 4
-
     distance = 150
     # init_pose = np.array([0.0, 45.0,distance])
     ob = env.reset()
@@ -58,77 +53,10 @@ if __name__ == '__main__':
     filename = filename + '.png'
     # ob, reward, done, _ = env.step(action)
     baseline_type = 1 # 0 - usual baseline, # 1 - bottom to top, # 2 top to bottom
-    # cv2.imwrite(filename,ob)
-    # init_pose = np.array([0.0, 45.0, 50.0])
-    # action = init_pose.copy()\
-    '''for 45 azimuth resolution '''
-    '''
-    steps = 0
-    print('steps', steps)
-    for i in range(1):
-        action = 4
-        ob, reward, done, _ = env.step(action)
-        steps += 1
-        print('steps', steps)
-        print('get close')
-    for i in range(7):
-        action = 0
-        ob, reward, done, _ = env.step(action)
-        steps += 1
-        print('steps', steps)
-    action = 3
-    ob, reward, done, _ = env.step(action)
-    steps += 1
-    print('steps', steps)
-    for i in range(8):
-        action = 0
-        ob, reward, done, _ = env.step(action)
-        steps += 1
-        print('steps', steps)
-
-
-        # ob, reward, done, _ = env.step(action)
-
-        # cv2.imwrite(filename,ob)
-        # print('ob shape: ', ob.shape)
-        print('reward: ', reward)
-        print('done:', done)
-    '''
-    '''for 22.5 azimuth resolution '''
-
-    # steps = 0
-    # print('steps', steps)
-    # for i in range(2):
-    #     action = 4
-    #     ob, reward, done, _ = env.step(action)
-    #     steps += 1
-    #     print('steps', steps)
-    #     print('get close')
-    # for i in range(15):
-    #     action = 0
-    #     ob, reward, done, _ = env.step(action)
-    #     steps += 1
-    #     print('steps', steps)
-    # action = 3
-    # ob, reward, done, _ = env.step(action)
-    # steps += 1
-    # print('steps', steps)
-    # for i in range(16):
-    #     action = 0
-    #     ob, reward, done, _ = env.step(action)
-    #     steps += 1
-    #     print('steps', steps)
-    #
-    #
-    #     # ob, reward, done, _ = env.step(action)
-    #
-    #     # cv2.imwrite(filename,ob)
-    #     # print('ob shape: ', ob.shape)
-    #     print('reward: ', reward)
-    #     print('done:', done)
+    azimuth_type = 0 # 0 - 45 deg resolution, 1 - 22.5 deg res
+    # if azimuth_type == 0:
     if baseline_type == 0:
         '''for 45 azimuth resolution '''
-
         steps = 0
         print('steps', steps)
         for i in range(1):
@@ -136,6 +64,7 @@ if __name__ == '__main__':
             ob, reward, done, _ = env.step(action)
             steps += 1
             print('steps', steps)
+            print('done:', done)
             print('get close')
             if done ==True:
                 ob = env.reset()
@@ -144,23 +73,19 @@ if __name__ == '__main__':
             ob, reward, done, _ = env.step(action)
             steps += 1
             print('steps', steps)
+            print('done:', done)
             if done ==True:
                 ob = env.reset()
         action = 3
         ob, reward, done, _ = env.step(action)
         steps += 1
         print('steps', steps)
+        print('done:', done)
         for i in range(8):
             action = 0
             ob, reward, done, _ = env.step(action)
             steps += 1
             print('steps', steps)
-
-
-            # ob, reward, done, _ = env.step(action)
-
-            # cv2.imwrite(filename,ob)
-            # print('ob shape: ', ob.shape)
             print('reward: ', reward)
             print('done:', done)
             if done ==True:
@@ -189,12 +114,6 @@ if __name__ == '__main__':
             ob, reward, done, _ = env.step(action)
             steps += 1
             print('steps', steps)
-
-
-            # ob, reward, done, _ = env.step(action)
-
-            # cv2.imwrite(filename,ob)
-            # print('ob shape: ', ob.shape)
             print('reward: ', reward)
             print('done:', done)
     elif baseline_type == 1:
@@ -205,9 +124,7 @@ if __name__ == '__main__':
 		# [0, -25, 0],
 		# [0, 0, -25],
 		# [0, 0, 25]
-
         '''for 45 azimuth resolution '''
-
         steps = 0
         print('steps', steps)
 
@@ -217,6 +134,7 @@ if __name__ == '__main__':
             steps += 1
             print('steps', steps)
             print('go down')
+            print('done:', done)
             if done ==True:
                 ob = env.reset()
 
@@ -226,6 +144,7 @@ if __name__ == '__main__':
             steps += 1
             print('steps', steps)
             print('get close')
+            print('done:', done)
             if done ==True:
                 ob = env.reset()
 
@@ -234,6 +153,7 @@ if __name__ == '__main__':
             ob, reward, done, _ = env.step(action)
             steps += 1
             print('steps', steps)
+            print('done:', done)
             if done ==True:
                 ob = env.reset()
 
@@ -243,11 +163,11 @@ if __name__ == '__main__':
             steps += 1
             print('steps', steps)
             print('go up')
+            print('done:', done)
             if done ==True:
                 ob = env.reset()
-
-
         print('steps', steps)
+        print('done:', done)
         for i in range(8):
             action = 0
             ob, reward, done, _ = env.step(action)
@@ -274,7 +194,79 @@ if __name__ == '__main__':
             print('steps', steps)
             if done ==True:
                 ob = env.reset()
+    elif baseline_type == 2:
 
+		# [45, 0, 0],
+		# [-45, 0, 0],
+		# [0, 25, 0],
+		# [0, -25, 0],
+		# [0, 0, -25],
+		# [0, 0, 25]
+        '''for 45 azimuth resolution '''
+        steps = 0
+        print('steps', steps)
+        for i in range(1):
+            action = 2
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('go up')
+            print('done', done)
+            if done ==True:
+                ob = env.reset()
+        for i in range(1):
+            action = 4
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('get close')
+            print('done', done)
+            if done ==True:
+                ob = env.reset()
+        for i in range(7):
+            action = 0
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('done', done)
+            if done ==True:
+                ob = env.reset()
+        for i in range(1):
+            action = 3
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('go down')
+            print('done', done)
+            if done ==True:
+                ob = env.reset()
+        print('steps', steps)
+        for i in range(7):
+            action = 0
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('reward: ', reward)
+            print('done:', done)
+            if done ==True:
+                ob = env.reset()
+        for i in range(1):
+            action = 3
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('go down')
+            print('done', done)
+            if done ==True:
+                ob = env.reset()
+        for i in range(7):
+            action = 0
+            ob, reward, done, _ = env.step(action)
+            steps += 1
+            print('steps', steps)
+            print('done', done)
+            if done ==True:
+                ob = env.reset()
 
 
     # Close the env and write monitor result info to disk
