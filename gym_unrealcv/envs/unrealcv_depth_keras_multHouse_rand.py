@@ -41,8 +41,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 resolution = (640,480),
                 log_dir='log/'
     ):
+     # self.test = False
      self.test = True
-     # self.test = True
      self.testSet = False
      self.test_all= False
      self.testSetA = False
@@ -55,13 +55,13 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.batch10 = False
      self.batch9 = False
      self.batch8 = False
-     self.batch7 = True
+     self.batch7 = False
      self.batch5 = False
      self.batch4 = False
      self.batch3 = False
      self.batch2 = False
      self.batch1 = False
-     self.bunny = False
+     self.bunny = True
      self.new_split = True
      self.test_baseline = False
      self.unsolved_ctr = 0
@@ -75,6 +75,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.reset_type = 'test'
      self.log_dir = log_dir
      # gt_pcl = pcl.load('house-000024-gt.ply')
+
+     if self.bunny == True:
+         self.depth_max = 0.88
+     else:
+         self.depth_max = 1.0
 
      # run virtual enrionment in docker container
      # self.docker = run_docker.RunDocker()
@@ -598,11 +603,17 @@ class depthFusion_keras_multHouse_rand(gym.Env):
         # print('action', change_pose)
 
         # MIN_elevation = 20
-        MIN_elevation = 10
-        # MAX_elevation = 70
-        MAX_elevation = 80
-        MIN_distance = 100
-        MAX_distance = 150
+        if self.bunny ==True:
+            MIN_elevation = 15
+            MAX_elevation = 50
+            MIN_distance = 100
+            MAX_distance = 100
+        else:
+            MIN_elevation = 10
+            # MAX_elevation = 70
+            MAX_elevation = 80
+            MIN_distance = 100
+            MAX_distance = 150
         # if self.batch9 == True:
         #     MIN_distance = 250
         #     MAX_distance = 300
@@ -656,6 +667,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
         if self.count_steps > self.max_steps:
             done = True
             # print('Reach Max Steps')
+
+        print('steps', self.count_steps)
 
         return state, reward, done, {}
 
@@ -1195,7 +1208,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        write_pose(pose, pose_filename)
        np.save(depth_filename, depth)
 
-       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = 1.0, house_id=self.house_id)
+       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = self.depth_max, house_id=self.house_id)
        # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
        # out_pcl = pcl.load(out_fn)
        # out_pcl_np = np.asarray(out_pcl)
@@ -1217,7 +1230,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        depth_start = time.time()
 
-       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = 1.0, house_id=self.house_id)
+       out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = self.depth_max, house_id=self.house_id)
        # print('out_pcl_np', out_pcl_np.shape)
        if out_pcl_np.shape[0] != 0:
            out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
@@ -1229,11 +1242,19 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        # print('coverage: ', cd)
        # print("Depth Fusion time: ", depth_end - depth_start)
-       # if self.test or self.testSet:
-       #     print('coverage: ', cd)
+       if self.test or self.testSet:
+           print('coverage: ', cd)
+       if self.bunny == True:
+           if self.test:
+               target_coverage = 90.0
+           else:
+               target_coverage = 89.0
+
+       else:
+           target_coverage = 96.0
        # if cd > 94.0:
-       if cd > 87.0:
-       # if cd > 96.0:
+       if cd > target_coverage:
+       # if cd > 96.0
            done = True
            reward = 100
 
@@ -1242,7 +1263,10 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            reward = cd_delta
            # reward = cd_delta*0.4
            # reward += -2 # added to push minimization of steps
-           reward += -2 + -0.02 * move_dist
+           if self.bunny:
+               reward += -3 + -0.02 * move_dist
+           else:
+               reward += -2 + -0.02 * move_dist
 
        self.cd_old = cd
        self.total_distance += move_dist

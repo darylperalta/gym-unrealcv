@@ -237,7 +237,7 @@ class depthFusion_keras(gym.Env):
        # out_pcl_np = np.asarray(out_pcl)
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        self.cd_old = self.compute_chamfer(out_pcl_np)
-       print('cd old ', self.cd_old)
+       # print('cd old ', self.cd_old)
        self.pose_prev = np.array(self.start_pose_rel)
 
 
@@ -271,6 +271,7 @@ class depthFusion_keras(gym.Env):
        # print("Depth Fusion time: ", depth_end - depth_start)
        # print('coverage: ', cd)
        if cd > 97.0:
+       # if cd > 96.0:
        # if cd > 96.5:
        # if cd > 60.0:
            done = True
@@ -281,7 +282,7 @@ class depthFusion_keras(gym.Env):
            # reward = cd_delta*0.2
            reward = cd_delta
            # reward = cd_delta*0.4
-           reward += -2 # added to push minimization of steps
+           reward += -2 + -0.02 * move_dist # added to push minimization of steps
 
        self.cd_old = cd
        self.total_distance += move_dist
