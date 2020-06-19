@@ -1,0 +1,38 @@
+{
+	"env_name": "unreal",
+	"env_bin": "bat6_setA_house8/MyProject5/Binaries/Linux/MyProject5",
+	"cam_id": 0,
+	"height": 40,
+	"pitch": 0,
+	"maxsteps": 99,
+	"trigger_th": 0.6,
+	"reward_th": 0.1,
+	"reward_factor": 10,
+	"collision_th": 50,
+	"waypoint_th": 200,
+	"start_pose_rel":[0.0, 45.0, 150.0],
+	"targets": [
+		"SM_Door_39"
+	],
+	"test_xy": [
+		[-106.195, 437.424],
+		[27.897, -162.437 ],
+		[10.832, 135.126  ],
+		[67.903, 26.995   ],
+		[-23.558, -187.354],
+		[-80.312, 254.579 ]
+	],
+	"discrete_actions": [
+		[22.5, 0, 0],
+		[-22.5, 0, 0],
+		[0, 25, 0],
+		[0, -25, 0],
+		[0, 0, -25],
+		[0, 0, 25]
+
+	],
+	"continous_actions": {
+		"high": [90, 45, 200],
+		"low":  [-90,  -45, -200]
+	}
+}
