@@ -675,3 +675,33 @@ register(
     max_episode_steps = 1000000
 
 )
+
+register(
+    id='DepthFusionBGrayMultHouseCont-v0',
+    entry_point='gym_unrealcv.envs:depthFusion_keras_multHouse_rand_cont',
+    kwargs = {'setting_file' : 'depth_fusionB_keras_multHouse_cont.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'gray',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
+
+register(
+    id='DepthFusionViewEffects-v0',
+    entry_point='gym_unrealcv.envs:depthFusion_view_effects',
+    kwargs = {'setting_file' : 'depth_fusion_view_effects.json',
+              'reset_type' : 'waypoint',
+              'test': False,
+              'action_type' : 'continuous',
+              'observation_type': 'gray',
+              'reward_type': 'bbox',
+              'docker': use_docker
+              },
+    max_episode_steps = 1000000
+
+)
