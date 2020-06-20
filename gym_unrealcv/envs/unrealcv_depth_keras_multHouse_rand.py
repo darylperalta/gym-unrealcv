@@ -42,14 +42,14 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 log_dir='log/'
     ):
      # self.test = False
-     self.test = True
-     self.testSet = False
-     self.test_all= False
-     self.testSetA = False
-     self.testSetB = False
-     self.testSetC = False
-     self.testSetD = False
-     self.testSetE = False
+     self.test = False
+     self.testSet = True
+     self.test_all= True
+     self.testSetA = True
+     self.testSetB = True
+     self.testSetC = True
+     self.testSetD = True
+     self.testSetE = True
      self.batch12 = False
      self.batch11 = False
      self.batch10 = False
@@ -58,17 +58,17 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.batch7 = False
      self.batch5 = False
      self.batch4 = False
-     self.batch3 = False
+     self.batch3 = True
      self.batch2 = False
      self.batch1 = False
-     self.bunny = True
+     self.bunny = False
      self.new_split = True
-     self.test_baseline = False
+     self.test_baseline = True
      self.unsolved_ctr = 0
      self.unsolved_list = []
 
      self.save_pcd = False
-     self.disp_houses = False
+     self.disp_houses = True
      setting = self.load_env_setting(setting_file)
      self.cam_id = 0
      # self.reset_type = 'random'
@@ -277,6 +277,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          elif self.batch3:
              if self.new_split:
                  remove_numA = [8,17,20,40,48]
+                 # remove_numA = [48] # Try test
+
                  remove_numB = [8,17,20,40,48]
                  remove_numC = [8,17,20,40,48]
                  remove_numD = [8,17,20,40,48]
@@ -474,7 +476,14 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  i += 1
 
      if not self.bunny:
+         self.housesA.sort()
+         self.housesB.sort()
+         self.housesC.sort()
+         self.housesD.sort()
+         self.housesE.sort()
          self.houses = self.housesA + self.housesB + self.housesC + self.housesD + self.housesE
+         # self.houses = self.housesB
+
      # display houses
      if self.disp_houses == True:
          print('display houses')
@@ -543,13 +552,13 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT4_full/groundtruth/'
      elif self.batch3 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT3_full/groundtruth/'
+         gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT3_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT3_full/groundtruth/'
      elif self.batch2 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT2_full/groundtruth/'
+         gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT2_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT2_full/groundtruth/'
      elif self.batch1 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT1_full/groundtruth/'
+         gt_dir = '/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT1_full/groundtruth/'
      elif self.bunny == True:
          gt_dir = '/home/daryl/datasets/bunny/groundtruth/'
@@ -668,7 +677,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
             done = True
             # print('Reach Max Steps')
 
-        print('steps', self.count_steps)
+        # print('steps', self.count_steps)
 
         return state, reward, done, {}
 
@@ -826,6 +835,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
                    print('Testing House: ', self.housesA[self.house_id])
                    self.unrealcv.show_obj(self.housesA[self.house_id])
+                   print('Using: ', self.houses[self.house_id])
 
                elif self.testSetB == True:
                    if self.batch7 == True:
@@ -1242,16 +1252,16 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
        # print('coverage: ', cd)
        # print("Depth Fusion time: ", depth_end - depth_start)
-       if self.test or self.testSet:
-           print('coverage: ', cd)
+       # if self.test or self.testSet:
+       #     print('coverage: ', cd)
        if self.bunny == True:
            if self.test:
                target_coverage = 90.0
            else:
                target_coverage = 89.0
-
        else:
            target_coverage = 96.0
+           # target_coverage = 87.0
        # if cd > 94.0:
        if cd > target_coverage:
        # if cd > 96.0
@@ -1338,6 +1348,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                # reta,retb,retc,retd=self.nn_distance(inp_placeholder,self.gt_pcl)
                # with tf.name_scope('chamfer'):
                # reta,retb,retc,retd=self.nn_distance(output,self.gt_pcl)
+               # print('ground truth', )
                _,_,retc,_=self.nn_distance(output,self.gt_pcl[self.house_id])
                # loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
 
@@ -1350,7 +1361,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                # coverage2 = tf.Tensor.eval(dist_mean2)
                # print('coverage2 ', coverage2)
                # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
-               # print('coverage ', coverage)
+               print('coverage ', coverage)
                return coverage*100
 
     def nn_distance(self,xyz1,xyz2):

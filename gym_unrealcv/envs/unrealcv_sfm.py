@@ -24,7 +24,7 @@ class sfmRelative(gym.Env):
                 observation_type = 'rgbd', # 'color', 'depth', 'rgbd'
                 reward_type = 'bbox', # distance, bbox, bbox_distance,
                 docker = False,
-                # resolution = (160,120)
+                # resolution = (84,84)
                 resolution = (640,480)
     ):
      setting = self.load_env_setting(setting_file)
@@ -67,6 +67,7 @@ class sfmRelative(gym.Env):
      #try hardcode start pose
      # self.startpose = [750.0, 295.0, 212.3,356.5,190.273, 0.0]
      self.startpose = [0.0, 707.1068, 707.1067,0.0,270.0, -45.0] # [0,45,1000]
+     # self.startpose = [0.0,99.6,8.72,0.0,270.0,-5.0] #[for depth fusion] [0,5,100]
      # ACTION: (Azimuth, Elevation, Distance)
 
 

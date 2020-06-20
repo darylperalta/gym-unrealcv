@@ -66,18 +66,23 @@ class preprocessor():
         gray_image = gray_image/255.0
         # print('gray image shape: ', gray_image.shape)
         # cv2.imshow('gray image ', gray_image)
+        # print(gray_image.shape)
         # cv2.waitKey(0)
         if reset:
-            #print 'reset'
+            # print('reset')
             for i in range(self.length):
                 self.previous[0][i] = gray_image
         else:
-            #print 'update'
+            # print('update')
             self.previous = np.insert(self.previous, 0, gray_image, axis=1)
             self.previous = np.delete(self.previous, -1, axis=1)
 
-
-        #print self.previous.shape
+        # print('display concat')
+        # for i in range(self.length):
+        #     print('i',i)
+        #     cv2.imshow('image _ concat',self.previous[0][i])
+        #     cv2.waitKey(0)
+        # print('shape batch', self.previous.shape)
         if K.image_dim_ordering() == 'tf':
             processed = self.previous.transpose(0, 2, 3, 1)
         else:
@@ -85,4 +90,4 @@ class preprocessor():
         return processed
 
         # print img_processed.shape
-        return img_processed
+        # return img_processed

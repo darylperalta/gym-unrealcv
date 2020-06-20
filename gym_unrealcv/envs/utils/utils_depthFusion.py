@@ -115,6 +115,7 @@ def eulerAnglesToRotationMatrix(theta):
     return R
 
 def depth_conversion(PointDepth, f):
+    print('depth conversion: ', f)
     H = PointDepth.shape[0]
     W = PointDepth.shape[1]
     i_c = np.float(H) / 2 - 1
@@ -279,6 +280,8 @@ def depth_fusion_mult(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', o
 
     im_width = 640
     im_height = 480
+    # im_width = 320
+    # im_height = 240
 
     # im_width = 160
     # im_height = 120
@@ -527,7 +530,7 @@ def depth_fusion(data_path = 'log', cam_K_file = 'camera-intrinsics.txt', output
           }
         }
 
-        """)
+        """, arch='sm_60')
 
     im_width = 640
     im_height = 480
