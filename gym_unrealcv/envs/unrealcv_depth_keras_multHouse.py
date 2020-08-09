@@ -12,7 +12,9 @@ from math import sin, cos, radians
 
 from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin, depth_fusion_mult
 import time
-import pcl
+# import pcl
+import open3d as o3d
+o3d.set_verbosity_level(o3d.VerbosityLevel.Error)
 # import run_docker # a lib for run env in a docker container
 # import gym_unrealcv.envs.utils.run_docker
 
@@ -123,9 +125,11 @@ class depthFusion_keras_multHouse(gym.Env):
      for i in range(len(self.houses)):
          gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
          # print('gt', gt_fn)
-         gt_pcl = pcl.load(gt_fn)
+         # gt_pcl = pcl.load(gt_fn)
+         gt_pcl = o3d.read_point_cloud(gt_fn)
+         gt_pcl = np.asarray(gt_pcl.points, dtype=np.float32)
          # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
-         gt_pcl = np.asarray(gt_pcl)
+         # gt_pcl = np.asarray(gt_pcl)
          self.gt_pcl.append(np.expand_dims(gt_pcl,axis=0))
 
     def _step(self, action = 0):

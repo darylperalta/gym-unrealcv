@@ -12,7 +12,9 @@ from math import sin, cos, radians
 
 from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin
 import time
-import pcl
+# import pcl
+import open3d as o3d
+o3d.set_verbosity_level(o3d.VerbosityLevel.Error)
 # import run_docker # a lib for run env in a docker container
 # import gym_unrealcv.envs.utils.run_docker
 
@@ -44,9 +46,11 @@ class depthFusion_keras_cont(gym.Env):
      self.reset_type = 'test'
      self.log_dir = log_dir
      # gt_pcl = pcl.load('house-000024-gt.ply')
-     gt_pcl = pcl.load('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
+     # gt_pcl = pcl.load('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
      # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
-     self.gt_pcl = np.asarray(gt_pcl)
+     gt_pcl = o3d.read_point_cloud('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
+     self.gt_pcl = np.asarray(gt_pcl.points, dtype=np.float32)
+     # self.gt_pcl = np.asarray(gt_pcl)
      self.gt_pcl = np.expand_dims(self.gt_pcl,axis=0)
      # run virtual enrionment in docker container
      # self.docker = run_docker.RunDocker()
