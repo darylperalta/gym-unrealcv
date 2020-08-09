@@ -48,7 +48,10 @@ class depthFusion_keras(gym.Env):
      # gt_pcl = pcl.load('house-000024-gt.ply')
      # gt_pcl = pcl.load('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
      # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
-     gt_pcl = o3d.read_point_cloud('/home/daryl/datasets/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
+     # gt_pcl = o3d.read_point_cloud('/home/daryl/datasets/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
+     # print('gt_fn', self.gt_fn)
+     gt_pcl = o3d.read_point_cloud(self.gt_fn)
+
      self.gt_pcl = np.asarray(gt_pcl.points, dtype=np.float32)
      # self.gt_pcl = np.asarray(gt_pcl)
      self.gt_pcl = np.expand_dims(self.gt_pcl,axis=0)
@@ -120,6 +123,8 @@ class depthFusion_keras(gym.Env):
      # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
      self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
+     self.nn_distance_module =tf.load_op_library(self.nn_distance_path)
+
      self.total_distance = 0
      # if K.backend() == 'tensorflow':
      #     config = tf.ConfigProto()
@@ -323,6 +328,8 @@ class depthFusion_keras(gym.Env):
        self.continous_actions = setting['continous_actions']
        self.env_bin = setting['env_bin']
        self.env_name = setting['env_name']
+       self.gt_fn = setting['pointcloud_path']
+       self.nn_distance_path = setting['nn_distance_path']
        print('env name: ', self.env_name)
        print('env id: ', setting['env_bin'])
        return setting
