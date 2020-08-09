@@ -115,7 +115,7 @@ def eulerAnglesToRotationMatrix(theta):
     return R
 
 def depth_conversion(PointDepth, f):
-    print('depth conversion: ', f)
+    # print('depth conversion: ', f)
     H = PointDepth.shape[0]
     W = PointDepth.shape[1]
     i_c = np.float(H) / 2 - 1

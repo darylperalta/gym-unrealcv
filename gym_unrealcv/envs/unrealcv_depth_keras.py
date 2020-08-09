@@ -290,8 +290,8 @@ class depthFusion_keras(gym.Env):
 
        self.cd_old = cd
        self.total_distance += move_dist
-       print('move_dist', move_dist)
-       print('total_dist', self.total_distance)
+       # print('move_dist', move_dist)
+       # print('total_dist', self.total_distance)
        return reward, done
 
     # calcuate the 2D distance between the target and camera
