@@ -280,6 +280,8 @@ class depthFusion_keras(gym.Env):
        # print("Depth Fusion time: ", depth_end - depth_start)
        # print('coverage: ', cd)
        if cd > 97.0:
+       # if cd > 100.0: #try 100 remove after
+
        # if cd > 96.0:
        # if cd > 96.5:
        # if cd > 60.0:

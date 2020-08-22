@@ -10,7 +10,7 @@
 	"reward_factor": 10,
 	"collision_th": 50,
 	"waypoint_th": 200,
-	"start_pose_rel":[0.0, 45.0, 125.0],
+	"start_pose_rel":[0.0, 45.0, 150.0],
 	"targets": [
 		"SM_Door_39"
 	],
