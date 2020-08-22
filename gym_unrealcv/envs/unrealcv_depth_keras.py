@@ -122,7 +122,7 @@ class depthFusion_keras(gym.Env):
      # state = self.unrealcv.read_image(self.cam_id, 'lit')
      # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
-     self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
+     # self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
      self.nn_distance_module =tf.load_op_library(self.nn_distance_path)
 
      self.total_distance = 0
@@ -331,7 +331,8 @@ class depthFusion_keras(gym.Env):
        self.env_bin = setting['env_bin']
        self.env_name = setting['env_name']
        self.gt_fn = setting['pointcloud_path']
-       self.nn_distance_path = setting['nn_distance_path']
+       # self.nn_distance_path = setting['nn_distance_path']
+       self.nn_distance_path = self.get_nn_distance(setting['nn_distance_path'])
        print('env name: ', self.env_name)
        print('env id: ', setting['env_bin'])
        return setting
@@ -340,6 +341,11 @@ class depthFusion_keras(gym.Env):
        import gym_unrealcv
        gympath = os.path.dirname(gym_unrealcv.__file__)
        return os.path.join(gympath, 'envs/setting', filename)
+
+    def get_nn_distance(self, filename):
+       import gym_unrealcv
+       gympath = os.path.dirname(gym_unrealcv.__file__)
+       return os.path.join(gympath, filename)
 
     def compute_chamfer(self, output):
        # with tf.Session('') as sess:
