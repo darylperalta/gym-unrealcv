@@ -20,7 +20,9 @@ class Navigation(UnrealCv):
         self.img_color = np.zeros(1)
         self.img_depth = np.zeros(1)
         self.img_counter = 0
-        self.plot = True
+        from gym_unrealcv.envs.navigation.plot_img_flag import plot_img_flag
+        self.plot = plot_img_flag
+
     def get_observation(self,cam_id, observation_type):
         if observation_type == 'color':
             self.img_color = state = self.read_image(cam_id, 'lit')

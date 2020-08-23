@@ -45,10 +45,6 @@ class depthFusion_keras(gym.Env):
      # self.reset_type = 'random'
      self.reset_type = 'test'
      self.log_dir = log_dir
-     # gt_pcl = pcl.load('house-000024-gt.ply')
-     # gt_pcl = pcl.load('/home/daryl/gym-unrealcv/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
-     # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
-     # gt_pcl = o3d.read_point_cloud('/home/daryl/datasets/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply')
      # print('gt_fn', self.gt_fn)
      gt_pcl = o3d.read_point_cloud(self.gt_fn)
 
@@ -92,11 +88,6 @@ class depthFusion_keras(gym.Env):
 
      self.startpose = self.unrealcv.get_pose(self.cam_id)
 
-     #try hardcode start pose
-     # self.startpose = [750.0, 295.0, 212.3,356.5,190.273, 0.0]
-     # self.startpose = [0.0, 707.1068, 707.1067,0.0,270.0, -45.0] # [0,45,1000]
-     # self.startpose = [0.0,99.6,8.72,0.0,270.0,-5.0] #[for depth fusion] [0,5,100]
-     # self.startpose = [0.0,70.7,70.7,0.0,270.0,-45.0]
      azimuth, elevation, distance = self.start_pose_rel
      # print('start pose rel', azimuth,elevation,distance)
      self.startpose = poseRelToAbs(azimuth, elevation, distance)
@@ -106,23 +97,10 @@ class depthFusion_keras(gym.Env):
      # ACTION: (Azimuth, Elevation, Distance)
 
 
-     # ACTION: (linear velocity ,angle velocity)
-     # self.ACTION_LIST = [
-     #         (20,  0),
-     #         (20, 15),
-     #         (20,-15),
-     #         (20, 30),
-     #         (20,-30),
-     # ]
      self.count_steps = 0
      # self.max_steps = 35
      self.target_pos = ( -60,   0,   50)
      self.pose_prev = np.array(self.start_pose_rel)
-     # self.action_space = gym.spaces.Discrete(len(self.ACTION_LIST))
-     # state = self.unrealcv.read_image(self.cam_id, 'lit')
-     # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
-
-     # self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
      self.nn_distance_module =tf.load_op_library(self.nn_distance_path)
 
      self.total_distance = 0
@@ -370,33 +348,8 @@ class depthFusion_keras(gym.Env):
 
                # loss_out = tf.Tensor.eval(loss)
                coverage = tf.Tensor.eval(dist_mean)
-               #
-               #
-               # dist_thresh2 = tf.greater(0.0008, reta)
-               # dist_mean2 = tf.reduce_mean(tf.cast(dist_thresh2, tf.float32))
-               #
-               # coverage2 = tf.Tensor.eval(dist_mean2)
-               # print('coverage2 ', coverage2)
-               # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
-               # print('coverage ', coverage)
+
                return coverage*100
-
-    # def nn_distance_init(self, output):
-
-
-       #@tf.RegisterShape('NnDistance')
-       #def _nn_distance_shape(op):
-        #shape1=op.inputs[0].get_shape().with_rank(3)
-        #shape2=op.inputs[1].get_shape().with_rank(3)
-        #return [tf.TensorShape([shape1.dims[0],shape1.dims[1]]),tf.TensorShape([shape1.dims[0],shape1.dims[1]]),
-            #tf.TensorShape([shape2.dims[0],shape2.dims[1]]),tf.TensorShape([shape2.dims[0],shape2.dims[1]])]
-       # @ops.RegisterGradient('NnDistance')
-       # def _nn_distance_grad(op,grad_dist1,grad_idx1,grad_dist2,grad_idx2):
-       #     xyz1=op.inputs[0]
-       #     xyz2=op.inputs[1]
-       #     idx1=op.outputs[1]
-       #     idx2=op.outputs[3]
-       #     return nn_distance_module.nn_distance_grad(xyz1,xyz2,grad_dist1,idx1,grad_dist2,idx2)
 
     def nn_distance(self,xyz1,xyz2):
        '''
