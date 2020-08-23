@@ -1,7 +1,7 @@
-Gym-UnrealCV: Realistic virtual worlds for visual reinforcement learning
+Gym-UnrealCV: Realistic virtual worlds for visual reinforcement learning [Modified for Scan-RL]
 ===
 
-This is a fork of [gym-unrealcv](https://github.com/zfw1226/gym-unrealcv) modified for [Scan-RL](https://github.com/darylperalta/ScanRL) implementation. Please see [gym-unrealcv](https://github.com/zfw1226/gym-unrealcv) for the original and updated implementation of gym-unrealcv.
+This is a fork of [gym-unrealcv](https://github.com/zfw1226/gym-unrealcv) modified for [Scan-RL](https://github.com/darylperalta/ScanRL) implementation. You may look at [gym-unrealcv](https://github.com/zfw1226/gym-unrealcv) for the original implementation and documentation.
 
 # Introduction
 **This project integrates Unreal Engine with OpenAI Gym for visual reinforcement learning based on [UnrealCV](http://unrealcv.org/).**
@@ -66,8 +66,28 @@ Manually download the environments for the different Scan-RL experiments to the 
     - [Batch 12](https://drive.google.com/drive/folders/1nqAOMUUZyWVn1kd97_Qlqiul_Cqo_FwK?usp=sharing)
 - [Stanford Bunny Experiment](https://drive.google.com/drive/folders/1me7pgsLLTZ6a_Gx8gLLLcvUIvLPDOMOy?usp=sharing)
 
+## Prepare Groundtruth points
+To replicate our experiments, you also need to download the groundtruth point clouds we used for each experiment in the following links:
+- [Single House Policy Experiment Groundtruth Point Cloud](https://drive.google.com/file/d/19p8tdLxdFnoJBe5kAg7VwEpgeUApHMMK/view?usp=sharing)
 
-# Usage for Circular Baselines
+You can save the groundtruth point cloud anywhere. You'll just need to specify the pat in the setting file (See *Prepare Environment setting files*).
+
+
+## Prepare Environment setting files
+### Single House Policy Experiment
+You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras_multHouse_rand_setA.json). Specify the location of the ground truth point cloud in variable ```pointcloud_path```. To change the azimuth resolution, you can modify variable ```discrete_actions```. If using 2 distance levels set ```start_pose_rel``` to [0.0, 45.0, 125.0] else if 3 distance levels set ```start_pose_rel``` to [0.0, 45.0, 150.0].
+
+
+## Usage for Circular Baselines
+- Single House Policy Experiment
+```
+cd example/circular_agent
+python circular_agent_close_depth.py
+```
+
+## Notes on chamfer distance computation
+
+Computation of Chamfer Distance was based on this [Pointnet Autoencoder](https://github.com/charlesq34/pointnet-autoencoder). The default [tf_operators](gym_unrealcv/envs/utils/tf_nndistance_so.so) in this repo were compiled for CUDA 8. You can recompile for other CUDA versions using the code in [Pointnet Autoencoder](https://github.com/charlesq34/pointnet-autoencoder).
 
 <!--
 ## Prepare Unreal Environment for Random Agent Example
