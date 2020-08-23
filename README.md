@@ -48,7 +48,7 @@ conda update conda
 conda install --channel menpo opencv
 ```
 ## Prepare Unreal Environment for Scan-RL
-You need prepare an unreal environment to run the Scan-RL Experiments.
+You need to prepare an unreal environment to run the Scan-RL Experiments.
 Manually download the environments for the different Scan-RL experiments to the [UnrealEnv](gym_unrealcv/envs/UnrealEnv) directory using the following links:
 - [Single House Policy Experiment](https://drive.google.com/drive/folders/1O7cFs-JP4uCYjV2jmmhEUudgAh_DUUHx?usp=sharing)
 - Multiple Houses Policy Experiments
@@ -66,11 +66,11 @@ Manually download the environments for the different Scan-RL experiments to the 
     - [Batch 12](https://drive.google.com/drive/folders/1nqAOMUUZyWVn1kd97_Qlqiul_Cqo_FwK?usp=sharing)
 - [Stanford Bunny Experiment](https://drive.google.com/drive/folders/1me7pgsLLTZ6a_Gx8gLLLcvUIvLPDOMOy?usp=sharing)
 
-## Prepare Groundtruth points
+## Prepare Ground truth points
 To replicate our experiments, you also need to download the groundtruth point clouds we used for each experiment in the following links:
 - [Single House Policy Experiment Groundtruth Point Cloud](https://drive.google.com/file/d/19p8tdLxdFnoJBe5kAg7VwEpgeUApHMMK/view?usp=sharing)
 
-You can save the groundtruth point cloud anywhere. You'll just need to specify the pat in the setting file (See *Prepare Environment setting files*).
+You can save the ground truth point cloud anywhere. You'll just need to specify the pat in the setting file (See *Prepare Environment setting files*).
 
 
 ## Prepare Environment setting files
