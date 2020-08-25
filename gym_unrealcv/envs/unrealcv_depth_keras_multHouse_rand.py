@@ -42,7 +42,10 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                 log_dir='log/'
     ):
      # self.test = False
-     self.test = False
+     setting = self.load_env_setting(setting_file)
+     # self.test = False
+     self.test = True # Testing (baseline or model)
+
      self.testSet = False
      self.test_all= False
      self.testSetA = False
@@ -50,11 +53,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.testSetC = False
      self.testSetD = False
      self.testSetE = False
+
      self.batch12 = False
      self.batch11 = False
      self.batch10 = False
      self.batch9 = False
-     self.batch8 = True
+     self.batch8 = False
      self.batch7 = False
      self.batch5 = False
      self.batch4 = False
@@ -62,14 +66,56 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.batch2 = False
      self.batch1 = False
      self.bunny = False
+
+     if self.batch == '1':
+         self.batch1 = True
+     elif self.batch == '2':
+         self.batch2 = True
+     elif self.batch == '3':
+         self.batch3 = True
+     elif self.batch == '4':
+         self.batch4 = True
+     elif self.batch == '5':
+         self.batch5 = True
+     elif self.batch == '7':
+         self.batch7 = True
+     elif self.batch == '8':
+         self.batch8 = True
+     elif self.batch == '9':
+         self.batch9 = True
+     elif self.batch == '10':
+         self.batch10 = True
+     elif self.batch == '11':
+         self.batch11 = True
+     elif self.batch == '12':
+         self.batch12 = True
+     elif self.batch =='bunny':
+         self.bunny = True
+
+
+     # self.batch12 = False
+     # self.batch11 = False
+     # self.batch10 = False
+     # self.batch9 = False
+     # self.batch8 = True
+     # self.batch7 = False
+     # self.batch5 = False
+     # self.batch4 = False
+     # self.batch3 = False
+     # self.batch2 = False
+     # self.batch1 = False
+     # self.bunny = False
+
      self.new_split = True
      self.test_baseline = True
+
+
      self.unsolved_ctr = 0
      self.unsolved_list = []
 
      self.save_pcd = False
      self.disp_houses = True
-     setting = self.load_env_setting(setting_file)
+     # setting = self.load_env_setting(setting_file)
      self.cam_id = 0
      # self.reset_type = 'random'
      self.reset_type = 'test'
@@ -532,42 +578,55 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # gt_dir = '/hdd/AIRSCAN/datasets/house_10/groundtruth/'
      # gt_dir = '/hdd/AIRSCAN/datasets/house_setA_comp/groundtruth/'
      if self.batch12 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT12_full/groundtruth/'
+         gt_dir = self.pcl_path12
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT12_full/groundtruth/'
      elif self.batch11 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT11_full/groundtruth/'
+         gt_dir = self.pcl_path11
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT11_full/groundtruth/'
      elif self.batch10 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT10_full/groundtruth_resized/'
+         gt_dir = self.pcl_path10
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT10_full/groundtruth_resized/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT10_full/groundtruth/'
      elif self.batch9 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT9_full/groundtruth_resized/'
+         gt_dir = self.pcl_path9
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT9_full/groundtruth_resized/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT10_full/groundtruth/'
      elif self.batch8 == True:
+         gt_dir = self.pcl_path8
          # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT8_full/groundtruth/'
-         gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT8_full/groundtruth/'
+         # gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT8_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT8_full/groundtruth/'
      elif self.batch7 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/'
+         gt_dir = self.pcl_path7
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT7_full/groundtruth/'
      elif self.batch5 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT5_full/groundtruth/'
+         gt_dir = self.pcl_path5
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT5_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT5_full/groundtruth/'
      elif self.batch4 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/'
+         gt_dir = self.pcl_path4
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT4_full/groundtruth/'
      elif self.batch3 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT3_full/groundtruth/'
+         gt_dir = self.pcl_path3
+         # gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT3_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT3_full/groundtruth/'
      elif self.batch2 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT2_full/groundtruth/'
+         gt_dir = self.pcl_path2
+         # gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT2_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT2_full/groundtruth/'
      elif self.batch1 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/'
+         gt_dir = self.pcl_path1
+         # gt_dir = '/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT1_full/groundtruth/'
      elif self.bunny == True:
-         gt_dir = '/home/daryl/datasets/bunny/groundtruth/'
+         gt_dir = self.pcl_path_bunny
+         # gt_dir = '/home/daryl/datasets/bunny/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/bunny/groundtruth/'
      else:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT6_full/groundtruth/'
+         gt_dir = self.pcl_path6
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT6_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT6_full/groundtruth/'
 
      self.gt_pcl = []
@@ -1329,9 +1388,27 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        self.env_bin = setting['env_bin']
        self.env_name = setting['env_name']
        self.nn_distance_path = self.get_nn_distance(setting['nn_distance_path'])
+       self.batch = setting["batch"]
+       self.pcl_path1 = setting['pcl_path1']
+       self.pcl_path2 = setting['pcl_path2']
+       self.pcl_path3 = setting['pcl_path3']
+       self.pcl_path4 = setting['pcl_path4']
+       self.pcl_path5 = setting['pcl_path5']
+       self.pcl_path6 = setting['pcl_path6']
+       self.pcl_path7 = setting['pcl_path7']
+       self.pcl_path8 = setting['pcl_path8']
+       self.pcl_path9 = setting['pcl_path9']
+       self.pcl_path10 = setting['pcl_path10']
+       self.pcl_path11 = setting['pcl_path11']
+       self.pcl_path12 = setting['pcl_path12']
+       self.pcl_path_bunny = setting['pcl_path_bunny']
+
 
        print('env name: ', self.env_name)
        print('env id: ', setting['env_bin'])
+       print('batch', self.batch)
+       # print('pcl_path1', self.pcl_path1)
+
        return setting
 
     def get_settingpath(self, filename):

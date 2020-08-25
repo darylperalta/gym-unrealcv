@@ -1,6 +1,6 @@
 {
 	"env_name": "unreal",
-	"env_bin": "mult_House_rand_BAT8Full/MyProject5/Binaries/Linux/MyProject5",
+	"env_bin": "mult_House_rand_BAT6Full/MyProject5/Binaries/Linux/MyProject5",
 	"cam_id": 0,
 	"height": 40,
 	"pitch": 0,
@@ -35,6 +35,22 @@
 		"high": [90, 22.5, 200],
 		"low":  [-90,  -22.5, -200]
 	},
+	"batch": "6",
+	"pcl_path1": "/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/",
+	"pcl_path2": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT2_full/groundtruth/",
+	"pcl_path3": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT3_full/groundtruth/",
+	"pcl_path4": "/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/",
+	"pcl_path5": "/hdd/AIRSCAN/datasets/house_BAT5_full/groundtruth/",
+	"pcl_path6": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT6_full/groundtruth/",
+	"pcl_path7": "/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/",
+	"pcl_path8": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT8_full/groundtruth/",
+	"pcl_path9": "/hdd/AIRSCAN/datasets/house_BAT9_full/groundtruth_resized/",
+	"pcl_path10": "/hdd/AIRSCAN/datasets/house_BAT10_full/groundtruth_resized/",
+	"pcl_path11": "/hdd/AIRSCAN/datasets/house_BAT11_full/groundtruth/",
+	"pcl_path12": "/hdd/AIRSCAN/datasets/house_BAT12_full/groundtruth/",
+	"pcl_path_bunny": "/home/daryl/datasets/bunny/groundtruth/",
+
 	"nn_distance_path": "envs/utils/tf_nndistance_so.so"
+
 
 }
