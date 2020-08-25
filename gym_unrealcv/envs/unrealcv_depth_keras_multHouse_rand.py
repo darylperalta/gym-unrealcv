@@ -43,22 +43,22 @@ class depthFusion_keras_multHouse_rand(gym.Env):
     ):
      # self.test = False
      self.test = False
-     self.testSet = True
-     self.test_all= True
-     self.testSetA = True
-     self.testSetB = True
-     self.testSetC = True
-     self.testSetD = True
-     self.testSetE = True
+     self.testSet = False
+     self.test_all= False
+     self.testSetA = False
+     self.testSetB = False
+     self.testSetC = False
+     self.testSetD = False
+     self.testSetE = False
      self.batch12 = False
      self.batch11 = False
      self.batch10 = False
      self.batch9 = False
-     self.batch8 = False
+     self.batch8 = True
      self.batch7 = False
      self.batch5 = False
      self.batch4 = False
-     self.batch3 = True
+     self.batch3 = False
      self.batch2 = False
      self.batch1 = False
      self.bunny = False
@@ -140,7 +140,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # state = self.unrealcv.read_image(self.cam_id, 'lit')
      # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
-     self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
+     # self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
+     self.nn_distance_module =tf.load_op_library(self.nn_distance_path)
+
      self.total_distance = 0
 
      objects = self.unrealcv.get_objects()
@@ -540,7 +542,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT9_full/groundtruth_resized/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT10_full/groundtruth/'
      elif self.batch8 == True:
-         gt_dir = '/hdd/AIRSCAN/datasets/house_BAT8_full/groundtruth/'
+         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT8_full/groundtruth/'
+         gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT8_full/groundtruth/'
          # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT8_full/groundtruth/'
      elif self.batch7 == True:
          gt_dir = '/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/'
@@ -1325,6 +1328,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        self.continous_actions = setting['continous_actions']
        self.env_bin = setting['env_bin']
        self.env_name = setting['env_name']
+       self.nn_distance_path = self.get_nn_distance(setting['nn_distance_path'])
+
        print('env name: ', self.env_name)
        print('env id: ', setting['env_bin'])
        return setting
@@ -1333,6 +1338,11 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        import gym_unrealcv
        gympath = os.path.dirname(gym_unrealcv.__file__)
        return os.path.join(gympath, 'envs/setting', filename)
+
+    def get_nn_distance(self, filename):
+       import gym_unrealcv
+       gympath = os.path.dirname(gym_unrealcv.__file__)
+       return os.path.join(gympath, filename)
 
     def compute_chamfer(self, output):
        # with tf.Session('') as sess:

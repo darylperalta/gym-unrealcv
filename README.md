@@ -68,7 +68,7 @@ Manually download the environments for the different Scan-RL experiments to the 
 
 ## Prepare Ground truth points
 To replicate our experiments, you also need to download the groundtruth point clouds we used for each experiment in the following links:
-- [Single House Policy Experiment Groundtruth Point Cloud](https://drive.google.com/file/d/19p8tdLxdFnoJBe5kAg7VwEpgeUApHMMK/view?usp=sharing)
+- [Single House Policy Experiment Ground truth Point Cloud](https://drive.google.com/file/d/19p8tdLxdFnoJBe5kAg7VwEpgeUApHMMK/view?usp=sharing)
 
 You can save the ground truth point cloud anywhere. You'll just need to specify the pat in the setting file (See *Prepare Environment setting files*).
 
@@ -76,6 +76,7 @@ You can save the ground truth point cloud anywhere. You'll just need to specify 
 ## Prepare Environment setting files
 ### Single House Policy Experiment
 You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras_multHouse_rand_setA.json). Specify the location of the ground truth point cloud in variable ```pointcloud_path```. To change the azimuth resolution, you can modify variable ```discrete_actions```. If using 2 distance levels set ```start_pose_rel``` to [0.0, 45.0, 125.0] else if 3 distance levels set ```start_pose_rel``` to [0.0, 45.0, 150.0].
+
 
 
 ## Usage for Circular Baselines

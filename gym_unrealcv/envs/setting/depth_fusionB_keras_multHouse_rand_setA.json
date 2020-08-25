@@ -34,5 +34,7 @@
 	"continous_actions": {
 		"high": [90, 22.5, 200],
 		"low":  [-90,  -22.5, -200]
-	}
+	},
+	"nn_distance_path": "envs/utils/tf_nndistance_so.so"
+
 }
