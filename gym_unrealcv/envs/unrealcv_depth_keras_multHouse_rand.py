@@ -9,10 +9,8 @@ from gym_unrealcv.envs.utils import env_unreal
 from gym_unrealcv.envs.navigation.interaction import Navigation
 import random
 from math import sin, cos, radians
-
 from gym_unrealcv.envs.utils.utils_depthFusion import write_pose, write_depth, depth_fusion, depth_conversion, poseRelToAbs, poseOrigin, depth_fusion_mult
 import time
-# import pcl
 import open3d as o3d
 o3d.set_verbosity_level(o3d.VerbosityLevel.Error)
 # import run_docker # a lib for run env in a docker container
@@ -44,16 +42,17 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # self.test = False
      setting = self.load_env_setting(setting_file)
      # self.test = False
-     self.test = True # Testing (baseline or model)
+     '''Testing (baseline or model) on train dataset
+     if training clear all the test flags
+     If testing using train set, set variable test in json file.
+     If using test set, clear 'test' variable
+     testSet is True if using test sets
+     test_all for using multiple sets
+     testSetA,testSetB is used to identify which set to use
 
-     self.testSet = False
-     self.test_all= False
-     self.testSetA = False
-     self.testSetB = False
-     self.testSetC = False
-     self.testSetD = False
-     self.testSetE = False
+     '''
 
+     #sets which batch of Houses3K to use
      self.batch12 = False
      self.batch11 = False
      self.batch10 = False
@@ -106,16 +105,8 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      # self.batch1 = False
      # self.bunny = False
 
-     self.new_split = True
-     self.test_baseline = True
-
-
      self.unsolved_ctr = 0
      self.unsolved_list = []
-
-     self.save_pcd = False
-     self.disp_houses = True
-     # setting = self.load_env_setting(setting_file)
      self.cam_id = 0
      # self.reset_type = 'random'
      self.reset_type = 'test'
@@ -127,19 +118,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      else:
          self.depth_max = 1.0
 
-     # run virtual enrionment in docker container
-     # self.docker = run_docker.RunDocker()
-     # env_ip, env_dir = self.docker.start(ENV_NAME=ENV_NAME)
 
      # start unreal env
      docker = False
      # self.unreal = env_unreal.RunUnreal(ENV_BIN="house_withfloor/MyProject2/Binaries/Linux/MyProject2")
      self.unreal = env_unreal.RunUnreal(ENV_BIN=self.env_bin)
      env_ip,env_port = self.unreal.start(docker,resolution)
-
-     # connect unrealcv client to server
-     # self.unrealcv = UnrealCv(self.cam_id, ip=env_ip, env=env_dir)
-
 
      # connect UnrealCV
      self.unrealcv = Navigation(cam_id=self.cam_id,
@@ -164,11 +148,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
      self.startpose = self.unrealcv.get_pose(self.cam_id)
 
-     #try hardcode start pose
-     # self.startpose = [750.0, 295.0, 212.3,356.5,190.273, 0.0]
-     # self.startpose = [0.0, 707.1068, 707.1067,0.0,270.0, -45.0] # [0,45,1000]
-     # self.startpose = [0.0,99.6,8.72,0.0,270.0,-5.0] #[for depth fusion] [0,5,100]
-     # self.startpose = [0.0,70.7,70.7,0.0,270.0,-45.0]
      azimuth, elevation, distance = self.start_pose_rel
      print('start pose rel', azimuth,elevation,distance)
      self.startpose = poseRelToAbs(azimuth, elevation, distance)
@@ -181,12 +160,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      self.count_house_frames = 0
      # self.max_steps = 35
      self.target_pos = ( -60,   0,   50)
-     # self.gt_pclpose_prev = np.array(self.start_pose_rel)
-     # self.action_space = gym.spaces.Discrete(len(self.ACTION_LIST))
-     # state = self.unrealcv.read_image(self.cam_id, 'lit')
-     # self.observation_space = gym.spaces.Box(low=0, high=255, shape=state.shape)
 
-     # self.nn_distance_module =tf.load_op_library('/home/daryl/gym-unrealcv/gym_unrealcv/envs/utils/tf_nndistance_so.so')
      self.nn_distance_module =tf.load_op_library(self.nn_distance_path)
 
      self.total_distance = 0
@@ -269,18 +243,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          self.housesD = [(obj) for obj in objects if obj.startswith('BAT6_SETD')]
          self.housesE = [(obj) for obj in objects if obj.startswith('BAT6_SETE')]
      if not self.bunny:
-         # print('A', self.housesA)
-         # self.housesA.sort()
-         # print('B', self.housesB)
-         # self.housesB.sort()
-         # print('B sorted', self.housesB)
-         # self.housesC.sort()
-         # print('C', self.housesC)
-         # self.housesD.sort()
-         # print('D', self.housesD)
-         # self.housesE.sort()
-         # print('E', self.housesE)
-
          # hide houses
          for house in self.housesA:
              self.unrealcv.hide_obj(house)
@@ -294,8 +256,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
              self.unrealcv.hide_obj(house)
 
      if (not self.testSet) and (not self.bunny):
-
-
          if self.batch1:
              if (self.new_split):
                  remove_numA = [23,33,39,41,46]
@@ -325,8 +285,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          elif self.batch3:
              if self.new_split:
                  remove_numA = [8,17,20,40,48]
-                 # remove_numA = [48] # Try test
-
                  remove_numB = [8,17,20,40,48]
                  remove_numC = [8,17,20,40,48]
                  remove_numD = [8,17,20,40,48]
@@ -337,7 +295,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  remove_numC = [2,4,10,29,35]
                  remove_numD = [4,22,24,30,36]
                  remove_numE = [13,14,21,33,34]
-
          elif self.batch4:
              if self.new_split:
                  remove_numA = [14,32,38,40,49]
@@ -364,7 +321,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  remove_numC = [7,19,24,34,39]
                  remove_numD = [1,11,34,38,48]
                  remove_numE = [13,34,39,40,43]
-
          elif self.batch7:
              if self.new_split:
                  remove_numA = [3,5,13,19]
@@ -572,63 +528,35 @@ class depthFusion_keras_multHouse_rand(gym.Env):
      else:
          self.house_id = random.randint(0, self.num_house-1) # randomize houses
 
-     # self.unrealcv.show_obj(self.houses[self.house_id])
-
-     # gt_dir = '/hdd/AIRSCAN/datasets/house38_44_2/groundtruth/'
-     # gt_dir = '/hdd/AIRSCAN/datasets/house_10/groundtruth/'
-     # gt_dir = '/hdd/AIRSCAN/datasets/house_setA_comp/groundtruth/'
+     '''Assign Ground truth directory '''
      if self.batch12 == True:
          gt_dir = self.pcl_path12
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT12_full/groundtruth/'
      elif self.batch11 == True:
          gt_dir = self.pcl_path11
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT11_full/groundtruth/'
      elif self.batch10 == True:
          gt_dir = self.pcl_path10
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT10_full/groundtruth_resized/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT10_full/groundtruth/'
      elif self.batch9 == True:
          gt_dir = self.pcl_path9
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT9_full/groundtruth_resized/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT10_full/groundtruth/'
      elif self.batch8 == True:
          gt_dir = self.pcl_path8
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT8_full/groundtruth/'
-         # gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT8_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT8_full/groundtruth/'
      elif self.batch7 == True:
          gt_dir = self.pcl_path7
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT7_full/groundtruth/'
      elif self.batch5 == True:
          gt_dir = self.pcl_path5
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT5_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT5_full/groundtruth/'
      elif self.batch4 == True:
          gt_dir = self.pcl_path4
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT4_full/groundtruth/'
      elif self.batch3 == True:
          gt_dir = self.pcl_path3
-         # gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT3_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT3_full/groundtruth/'
      elif self.batch2 == True:
          gt_dir = self.pcl_path2
-         # gt_dir = '/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT2_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT2_full/groundtruth/'
      elif self.batch1 == True:
          gt_dir = self.pcl_path1
-         # gt_dir = '/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT1_full/groundtruth/'
      elif self.bunny == True:
          gt_dir = self.pcl_path_bunny
-         # gt_dir = '/home/daryl/datasets/bunny/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/bunny/groundtruth/'
      else:
          gt_dir = self.pcl_path6
-         # gt_dir = '/hdd/AIRSCAN/datasets/house_BAT6_full/groundtruth/'
-         # gt_dir = '/home/justine/airscan_gym/gym-unrealcv/house_BAT6_full/groundtruth/'
 
+     '''Load ground truth points'''
      self.gt_pcl = []
      for i in range(len(self.houses)):
          # gt_fn = gt_dir + self.houses[i] + '_sampled_10k.ply'
@@ -650,10 +578,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  gt_fn = gt_fn.replace('SETE', 'SETA')
          # print('gt_fn after: ', gt_fn)
 
-         # print('gt', gt_fn)
-         # gt_pcl = pcl.load(gt_fn)
-         # gt_pcl = pcl.load('/home/daryl/datasets/BAT6_SETA_HOUSE8_WTR_sampled_10k.ply')
-         # gt_pcl = np.asarray(gt_pcl)
          gt_pcl = o3d.read_point_cloud(gt_fn)
          gt_pcl = np.asarray(gt_pcl.points, dtype=np.float32)
          # print('o3d pcl', gt_pcl)
@@ -681,17 +605,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
             MAX_distance = 100
         else:
             MIN_elevation = 10
-            # MAX_elevation = 70
             MAX_elevation = 80
             MIN_distance = 100
             MAX_distance = 150
-        # if self.batch9 == True:
-        #     MIN_distance = 250
-        #     MAX_distance = 300
-
-
-        # MAX_distance = 175
-        # MAX_distance = 125
 
         pose_new = pose_prev + change_pose
         # pose_new = pose_prev + np.array([30,0,0]) # to test ICM
@@ -710,14 +626,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
         elif (pose_new[0]>=359):
             pose_new[0] = pose_new[0] - 360
 
-        # print('action ', action)
-        # print('pose new', pose_new)
-        # print(azimuth, elevation, distance )
-        # collision, move_dist = self.unrealcv.move_rel2(self.cam_id, azimuth, elevation, distance)
         collision, move_dist = self.unrealcv.move_rel2(self.cam_id, pose_new[0], pose_new[1], pose_new[2])
-        # print('collision', collision)
-        # print('distance:   ', move_dist)
-
         self.pose_prev =pose_new
         # state = self.unrealcv.read_image(self.cam_id, 'lit')
         state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
@@ -737,9 +646,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
         # limit max step per episode
         if self.count_steps > self.max_steps:
             done = True
-            # print('Reach Max Steps')
-
-        # print('steps', self.count_steps)
 
         return state, reward, done, {}
 
@@ -747,12 +653,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
     def _reset(self, start_pose_rel = None):
 
        x,y,z,_, yaw, _ = self.startpose
-       # self.house_id = 0
-       #
-       # for house in self.houses:
-       #     self.unrealcv.hide_obj(house)
-       #
-       # self.unrealcv.show_obj(self.houses[self.house_id])
 
        if self.reset_type == 'random':
            distance = 1000
@@ -793,12 +693,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                self.unrealcv.show_obj(self.houses[self.house_id])
 
            elif self.testSet == True:
-               # self.house_id += 1
-               #8 'dont use'
-               # self.house_id = 41
-               # self.house_id = 70
-               # Add extracting house id's from a list of house numbers
-
                if self.testSetA == True:
                    # testA = [3,4,21,45,49]
                    if self.batch7 == True:
@@ -1281,19 +1175,12 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        np.save(depth_filename, depth)
 
        out_pcl_np = depth_fusion_mult(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_house_frames + 1, save_pcd = self.save_pcd, max_depth = self.depth_max, house_id=self.house_id)
-       # out_fn = 'log/house-' + '{:06}'.format(self.count_steps+1) + '.ply'
-       # out_pcl = pcl.load(out_fn)
-       # out_pcl_np = np.asarray(out_pcl)
        out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
        self.cd_old = self.compute_chamfer(out_pcl_np)
        # print('cd old ', self.cd_old)
        self.pose_prev = np.array(self.start_pose_rel)
 
        return  state
-
-    # close docker while closing openai gym
-    # def _close(self):
-       # self.docker.close()
 
     # calcuate reward according to your task
     def reward(self,collision, move_dist):
@@ -1313,9 +1200,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        depth_end = time.time()
 
        # print('coverage: ', cd)
-       # print("Depth Fusion time: ", depth_end - depth_start)
-       # if self.test or self.testSet:
-       #     print('coverage: ', cd)
        if self.bunny == True:
            if self.test:
                target_coverage = 90.0
@@ -1402,12 +1286,23 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        self.pcl_path11 = setting['pcl_path11']
        self.pcl_path12 = setting['pcl_path12']
        self.pcl_path_bunny = setting['pcl_path_bunny']
+       self.test = bool(setting['test'])
+       self.testSet = bool(setting['testSet'])
+       self.test_all = bool(setting['test_all'])
+       self.testSetA = bool(setting['testSetA'])
+       self.testSetB = bool(setting['testSetB'])
+       self.testSetC = bool(setting['testSetC'])
+       self.testSetD = bool(setting['testSetD'])
+       self.testSetE = bool(setting['testSetE'])
+       self.new_split = bool(setting['new_split'])
+       self.test_baseline = bool(setting['test_baseline'])
+       self.save_pcd = bool(setting['save_pcd'])
+       self.disp_houses = bool(setting['disp_houses'])
 
 
        print('env name: ', self.env_name)
        print('env id: ', setting['env_bin'])
        print('batch', self.batch)
-       # print('pcl_path1', self.pcl_path1)
 
        return setting
 
@@ -1422,20 +1317,9 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        return os.path.join(gympath, filename)
 
     def compute_chamfer(self, output):
-       # with tf.Session('') as sess:
-       # sess = K.get_session()
-       # self.sess.run(tf.global_variables_initializer())
-       # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
        with tf.device('/gpu:0'):
            sess = K.get_session()
            with sess.as_default():
-           # with tf.Session('') as sess:
-
-               # inp_placeholder = tf.placeholder(tf.float32)
-               # reta,retb,retc,retd=self.nn_distance(inp_placeholder,self.gt_pcl)
-               # with tf.name_scope('chamfer'):
-               # reta,retb,retc,retd=self.nn_distance(output,self.gt_pcl)
-               # print('ground truth', )
                _,_,retc,_=self.nn_distance(output,self.gt_pcl[self.house_id])
                # loss=tf.reduce_sum(reta)+tf.reduce_sum(retc)
 
@@ -1445,9 +1329,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
 
                # loss_out = tf.Tensor.eval(loss)
                coverage = tf.Tensor.eval(dist_mean)
-               # coverage2 = tf.Tensor.eval(dist_mean2)
-               # print('coverage2 ', coverage2)
-               # loss_out = self.sess.run(loss,feed_dict={inp_placeholder: output})
                print('coverage ', coverage)
                return coverage*100
 

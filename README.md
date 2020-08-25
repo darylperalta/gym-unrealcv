@@ -74,9 +74,41 @@ You can save the ground truth point cloud anywhere. You'll just need to specify 
 
 
 ## Prepare Environment setting files
-### Single House Policy Experiment
-You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras_multHouse_rand_setA.json). Specify the location of the ground truth point cloud in variable ```pointcloud_path```. To change the azimuth resolution, you can modify variable ```discrete_actions```. If using 2 distance levels set ```start_pose_rel``` to [0.0, 45.0, 125.0] else if 3 distance levels set ```start_pose_rel``` to [0.0, 45.0, 150.0].
 
+### Single House Policy Experiment
+You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras.json). Specify the location of the ground truth point cloud in variable ```pointcloud_path```. To change the azimuth resolution, you can modify variable ```discrete_actions```. If using 2 distance levels set ```start_pose_rel``` to [0.0, 45.0, 125.0] else if 3 distance levels set ```start_pose_rel``` to [0.0, 45.0, 150.0].
+
+### Multiple Houses Single Policy Experiment
+You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras_multHouse_rand_setA.json).
+```
+"batch": "6",
+"pcl_path1": "/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/",
+"pcl_path2": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT2_full/groundtruth/",
+"pcl_path3": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT3_full/groundtruth/",
+"pcl_path4": "/hdd/AIRSCAN/datasets/house_BAT4_full/groundtruth/",
+"pcl_path5": "/hdd/AIRSCAN/datasets/house_BAT5_full/groundtruth/",
+"pcl_path6": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT6_full/groundtruth/",
+"pcl_path7": "/hdd/AIRSCAN/datasets/house_BAT7_full/groundtruth/",
+"pcl_path8": "/hdd/AIRSCAN/datasets/houses3k_gt_ply/house_BAT8_full/groundtruth/",
+"pcl_path9": "/hdd/AIRSCAN/datasets/house_BAT9_full/groundtruth_resized/",
+"pcl_path10": "/hdd/AIRSCAN/datasets/house_BAT10_full/groundtruth_resized/",
+"pcl_path11": "/hdd/AIRSCAN/datasets/house_BAT11_full/groundtruth/",
+"pcl_path12": "/hdd/AIRSCAN/datasets/house_BAT12_full/groundtruth/",
+"pcl_path_bunny": "/home/daryl/datasets/bunny/groundtruth/",
+"nn_distance_path": "envs/utils/tf_nndistance_so.so",
+"test": 1,
+"testSet": 0,
+"test_all": 0,
+"testSetA": 0,
+"testSetB": 0,
+"testSetC": 0,
+"testSetD": 0,
+"testSetE": 0,
+"new_split": 1,
+"test_baseline": 1,
+"save_pcd": 0,
+"disp_houses": 1
+```
 
 
 ## Usage for Circular Baselines
@@ -84,6 +116,11 @@ You can change some environment settings using this [setting file](gym_unrealcv/
 ```
 cd example/circular_agent
 python circular_agent_close_depth.py
+```
+- Multiple Houses Single Policy Experiment
+```
+cd example/circular_agent
+python circular_agent_baseline.py
 ```
 
 ## Notes on chamfer distance computation

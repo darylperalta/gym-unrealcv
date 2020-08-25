@@ -50,7 +50,18 @@
 	"pcl_path12": "/hdd/AIRSCAN/datasets/house_BAT12_full/groundtruth/",
 	"pcl_path_bunny": "/home/daryl/datasets/bunny/groundtruth/",
 
-	"nn_distance_path": "envs/utils/tf_nndistance_so.so"
-
+	"nn_distance_path": "envs/utils/tf_nndistance_so.so",
+	"test": 1,
+	"testSet": 0,
+	"test_all": 0,
+	"testSetA": 0,
+	"testSetB": 0,
+	"testSetC": 0,
+	"testSetD": 0,
+	"testSetE": 0,
+	"new_split": 1,
+	"test_baseline": 1,
+	"save_pcd": 0,
+	"disp_houses": 1
 
 }
