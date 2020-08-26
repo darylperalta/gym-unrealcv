@@ -76,10 +76,10 @@ You can save the ground truth point cloud anywhere. You'll just need to specify 
 ## Prepare Environment setting files
 
 ### Single House Policy Experiment
-You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras.json). Specify the location of the ground truth point cloud in variable ```pointcloud_path```. To change the azimuth resolution, you can modify variable ```discrete_actions```. If using 2 distance levels set ```start_pose_rel``` to [0.0, 45.0, 125.0] else if 3 distance levels set ```start_pose_rel``` to [0.0, 45.0, 150.0].
+You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras.json). Specify the location of the ground truth point cloud in variable ```pointcloud_path```. To change the azimuth resolution, you can modify variable ```discrete_actions```. If using 2 distance levels set ```start_pose_rel``` to [0.0, 45.0, 125.0] else if 3 distance levels set ```start_pose_rel``` to [0.0, 45.0, 150.0]. ```min_elevation, max_elevation, min_distance and max_distance``` can be used to vary the range of eleavtion and distance the agent can go to as discussed in the paper.
 
 ### Multiple Houses Single Policy Experiment
-You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras_multHouse_rand_setA.json).
+You can change some environment settings using this [setting file](gym_unrealcv/envs/setting/depth_fusionB_keras_multHouse_rand_setA.json). Variables to be set are shown below:
 ```
 "batch": "6",
 "pcl_path1": "/hdd/AIRSCAN/datasets//houses3k_gt_ply/house_BAT1_full/groundtruth/",
@@ -108,7 +108,22 @@ You can change some environment settings using this [setting file](gym_unrealcv/
 "test_baseline": 1,
 "save_pcd": 0,
 "disp_houses": 1
+"disp_coverage": 0
 ```
+- ```batch``` is used to indicate the batch from Houses3K. Use 0-12 for Houses3k and 'bunny' if using Stanford Bunny.
+- ```pcl_path1, ...``` are the path for ground truth point clouds for the different batches.
+- ```nn_distance_path``` is used for the tf operator for the chamfer distance.
+- ```test, testSet, test_all, testSetA, ..., testSetE``` are used to control if you're using train set or a specific test set. If training using the train set set all of them to 0.
+- ```test``` is assigned to 1 when testing ScanRL or the circular baseline in the train set.
+- ```testSet``` is assigned with 1 to do the test on test set. Make sure to clear ```test``` when using the test set.
+- ```test_all``` is used to use multiple subsets for each batch of Houses3K.
+- ``` testSetA, ..., testSetE``` allow to choose which subset to use.
+- ```new_split``` should be 1 if using geometry split and 0 for random split.
+- ```test_baseline``` should be  1 if running the circular baselines.
+- ```disp_coverage``` can be set to 1 to diusplay surface coverage per step.
+
+### Stanford Bunny Experiment
+For stanford bunny experiment this is the [setting file](gym_unrealcv/envs/setting/bunny.json). Specify the location of the ground truth point cloud in variable ```pcl_path_bunny```. Make sure `batch` is set to "bunny".
 
 
 ## Usage for Circular Baselines
@@ -117,6 +132,7 @@ You can change some environment settings using this [setting file](gym_unrealcv/
 cd example/circular_agent
 python circular_agent_close_depth.py
 ```
+Use argument ```--circ_type``` to choose which circular baseline type to use.
 - Multiple Houses Single Policy Experiment
 ```
 cd example/circular_agent
