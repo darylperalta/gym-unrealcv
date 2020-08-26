@@ -29,10 +29,15 @@
 		[0, -25, 0],
 		[0, 0, -25],
 		[0, 0, 25]
-
 	],
 	"continous_actions": {
 		"high": [90, 90, 25],
 		"low":  [-90,  -90, -25]
-	}
+	},
+	"pointcloud_path": "/home/daryl/datasets/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply",
+	"nn_distance_path": "envs/utils/tf_nndistance_so.so",
+	"min_elevation": 20,
+	"max_elevation": 70,
+	"min_distance": 100,
+	"max_distance": 150
 }
