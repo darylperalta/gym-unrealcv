@@ -1,0 +1,11 @@
+example/circular_agent/log/*.npy
+example/circular_agent/log/*.png
+example/circular_agent/log/*.txt
+!example/circular_agent/log/frame-001000.pose.txt
+example/circular_agent/log_*
+*__pycache__*
+example/circular_agent/*.npy
+example/circular_agent/*.ply
+gym_unrealcv/envs/UnrealEnv/bat*
+gym_unrealcv/envs/UnrealEnv/bunny/*
+gym_unrealcv/envs/UnrealEnv/mult*
