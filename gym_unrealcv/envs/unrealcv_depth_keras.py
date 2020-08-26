@@ -88,35 +88,30 @@ class depthFusion_keras(gym.Env):
 
      self.total_distance = 0
 
+
     def _step(self, action = 0):
         self.count_steps += 1
         azimuth, elevation, distance  = self.discrete_actions[action]
         change_pose = np.array((azimuth, elevation, distance))
         pose_prev = np.array(self.pose_prev)
 
-        MIN_elevation = 20
-        MAX_elevation = 70
-        MIN_distance = 100
-        MAX_distance = 150
-        # MAX_distance = 125
-
         pose_new = pose_prev + change_pose
 
-        if pose_new[2] > MAX_distance:
-            pose_new[2] = MAX_distance
-        elif pose_new[2] < MIN_distance:
-            pose_new[2] = MIN_distance
-        if (pose_new[1] >= MAX_elevation):
-            pose_new[1] = MAX_elevation
-        elif (pose_new[1] <= MIN_elevation):
-            pose_new[1] = MIN_elevation
+        if pose_new[2] > self.max_distance:
+            pose_new[2] = self.max_distance
+        elif pose_new[2] < self.min_distance:
+            pose_new[2] = self.min_distance
+        if (pose_new[1] >= self.max_elevation):
+            pose_new[1] = self.max_elevation
+        elif (pose_new[1] <= self.min_elevation):
+            pose_new[1] = self.min_elevation
         else:
             pose_new[1] = 45.0
         if (pose_new[0] < 0):
             pose_new[0] = 360 + pose_new[0]
         elif (pose_new[0]>=359):
             pose_new[0] = pose_new[0] - 360
-
+        print('pose new', pose_new)
 
         collision, move_dist = self.unrealcv.move_rel2(self.cam_id, pose_new[0], pose_new[1], pose_new[2])
 
@@ -185,7 +180,6 @@ class depthFusion_keras(gym.Env):
        done = False
        # depth_start = time.time()
        out_pcl_np = depth_fusion(self.log_dir, first_frame_idx =0, base_frame_idx=1000, num_frames = self.count_steps + 1, save_pcd = False, max_depth = 1.0)
-       # print('out_pcl_np', out_pcl_np.shape)
        if out_pcl_np.shape[0] != 0:
            out_pcl_np = np.expand_dims(out_pcl_np,axis=0)
            cd = self.compute_chamfer(out_pcl_np)
@@ -195,6 +189,7 @@ class depthFusion_keras(gym.Env):
 
        # depth_end = time.time()
        target_coverage = 96.0
+       print('coverage', cd)
        # target_coverage = 97.0
        if cd > target_coverage:
            done = True
@@ -240,6 +235,10 @@ class depthFusion_keras(gym.Env):
        self.env_name = setting['env_name']
        self.gt_fn = setting['pointcloud_path']
        self.nn_distance_path = self.get_nn_distance(setting['nn_distance_path'])
+       self.min_elevation = setting['min_elevation']
+       self.max_elevation = setting['max_elevation']
+       self.min_distance = setting['min_distance']
+       self.max_distance = setting['max_distance']
        print('env name: ', self.env_name)
        print('env id: ', setting['env_bin'])
        return setting
