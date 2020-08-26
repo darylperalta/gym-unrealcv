@@ -36,6 +36,10 @@
 		"low":  [-90,  -45, -200]
 	},
 	"pointcloud_path": "/home/daryl/datasets/BAT6_SETA_HOUSE44_OBJ_No_InnerMesh_sampled_10k.ply",
-	"nn_distance_path": "envs/utils/tf_nndistance_so.so"
+	"nn_distance_path": "envs/utils/tf_nndistance_so.so",
+	"min_elevation": 20,
+	"max_elevation": 70,
+	"min_distance": 100,
+	"max_distance": 150
 
 }
