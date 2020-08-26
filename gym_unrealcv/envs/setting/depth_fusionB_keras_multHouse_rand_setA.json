@@ -51,7 +51,7 @@
 	"pcl_path_bunny": "/home/daryl/datasets/bunny/groundtruth/",
 
 	"nn_distance_path": "envs/utils/tf_nndistance_so.so",
-	"test": 1,
+	"test": 0,
 	"testSet": 0,
 	"test_all": 0,
 	"testSetA": 0,
@@ -62,6 +62,7 @@
 	"new_split": 1,
 	"test_baseline": 1,
 	"save_pcd": 0,
-	"disp_houses": 1
+	"disp_houses": 1,
+	"disp_coverage": 0
 
 }

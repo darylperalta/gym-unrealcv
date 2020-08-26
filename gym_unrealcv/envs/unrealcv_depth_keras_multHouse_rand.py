@@ -420,7 +420,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
          remove_numE.sort()
          # Remove for SetA
          i = 0
-
          while(1):
              num = int((self.housesA[i].split('HOUSE')[1]).split('_')[0])
              if num in remove_numA:
@@ -432,7 +431,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  i += 1
          # Remove for B
          i = 0
-
          while(1):
              num = int((self.housesB[i].split('HOUSE')[1]).split('_')[0])
              if num in remove_numB:
@@ -444,7 +442,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  i += 1
          # Remove for SetC
          i = 0
-
          while(1):
              num = int((self.housesC[i].split('HOUSE')[1]).split('_')[0])
              if num in remove_numC:
@@ -456,7 +453,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  i += 1
          # Remove for SetD
          i = 0
-
          while(1):
              num = int((self.housesD[i].split('HOUSE')[1]).split('_')[0])
              if num in remove_numD:
@@ -468,7 +464,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                  i += 1
          # Remove for SetE
          i = 0
-
          while(1):
              num = int((self.housesE[i].split('HOUSE')[1]).split('_')[0])
              if num in remove_numE:
@@ -594,10 +589,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
         change_pose = np.array((azimuth, elevation, distance))
 
         pose_prev = np.array(self.pose_prev)
-        # print('pose prev', pose_prev)
-        # print('action', change_pose)
 
-        # MIN_elevation = 20
         if self.bunny ==True:
             MIN_elevation = 15
             MAX_elevation = 50
@@ -1236,8 +1228,6 @@ class depthFusion_keras_multHouse_rand(gym.Env):
            self.unsolved_ctr += 1
            self.unsolved_list.append(self.house_id)
            done = True
-       # elif (self.count_house_frames == 50):
-       #     done = True
 
        # print('total distance: ', self.total_distance)
        return reward, done
@@ -1298,6 +1288,7 @@ class depthFusion_keras_multHouse_rand(gym.Env):
        self.test_baseline = bool(setting['test_baseline'])
        self.save_pcd = bool(setting['save_pcd'])
        self.disp_houses = bool(setting['disp_houses'])
+       self.disp_coverage = bool(setting['disp_coverage'])
 
 
        print('env name: ', self.env_name)
@@ -1327,9 +1318,10 @@ class depthFusion_keras_multHouse_rand(gym.Env):
                dist_thresh = tf.greater(0.0008, retc)
                dist_mean = tf.reduce_mean(tf.cast(dist_thresh, tf.float32))
 
-               # loss_out = tf.Tensor.eval(loss)
                coverage = tf.Tensor.eval(dist_mean)
-               print('coverage ', coverage)
+               if self.disp_coverage:
+                   print('coverage', coverage)
+
                return coverage*100
 
     def nn_distance(self,xyz1,xyz2):
