@@ -41,13 +41,6 @@ if __name__ == '__main__':
     reward = 0
     done = False
 
-    num_views = 16
-    num_views = 34
-    num_first_elev = 8
-
-    distance = 150
-
-
     # actions = [4,4,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0]
     actions = [4,4,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0]
 
