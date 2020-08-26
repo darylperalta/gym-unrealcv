@@ -29,7 +29,6 @@
 		[0, -25, 0],
 		[0, 0, -25],
 		[0, 0, 25]
-
 	],
 	"continous_actions": {
 		"high": [90, 45, 200],
@@ -41,5 +40,4 @@
 	"max_elevation": 70,
 	"min_distance": 100,
 	"max_distance": 150
-
 }

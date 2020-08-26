@@ -10,36 +10,25 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import keras.backend as K
-# from gym_unrealcv.envs.utils.unrealcv_basic import UnrealCv
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=None)
+    parser = argparse.ArgumentParser(description="Circular Baseline for Single Houuse Policy Experiment")
     parser.add_argument("-e","--env_id", nargs='?', default='DepthFusionBGray-v0', help='Select the environment to run')
+    parser.add_argument("--circ_type", dest='circ_type', type=int, default=2, help='circular baseline type (1,2,3). 1 for Circ 1 (bottom to top), 2 for Circ 2 (Mid, Bot, Top), 3 for Circ 3 (Top to bottom). Default is 2.')
+    parser.add_argument("--azimuth_type", dest='azimuth_type', type=int, default=0, help='Azimuth resolution. Use 0 for 45 degree resolution and 1 for 22.5 degree resolution.')
+    parser.add_argument("--distance_levels", dest='distance_levels', type=int, default=3, help='Number of distance levels (2 or 3). Default is 3.')
+
     args = parser.parse_args()
+
     print('envid: ', args.env_id)
     env = gym.make(args.env_id)
-
-    env.rendering = True
-    env.rendering = False
-
-    # You provide the directory to write to (can be an existing
-    # directory, including one with existing data -- all monitor files
-    # will be namespaced). You can also dump to a tempdir if you'd
-    # like: tempfile.mkdtemp().
-    outdir = '/tmp/random-agent-results'
-    env = wrappers.Monitor(env, directory=outdir, force=True)
-    env.rendering = False
     env.seed(0)
     print('circular agent')
 
-    episode_count = 100
+    print('args circ', args.circ_type)
     reward = 0
     done = False
 
-    # num_views = 16
-    # num_views = 34
-    num_first_elev = 8
-    distance = 150
     # init_pose = np.array([0.0, 45.0,distance])
     ob = env.reset()
     print('after reset first')
@@ -47,9 +36,39 @@ if __name__ == '__main__':
     filename = 'ob%d'%i
     filename = filename + '.png'
     # ob, reward, done, _ = env.step(action)
-    baseline_type = 2 # 0 - usual baseline, # 1 - bottom to top, # 2 top to bottom
-    azimuth_type = 0 # 0 - 45 deg resolution, 1 - 22.5 deg res
-    distance_levels_num = 3 # 2 - 2 levels, # 3 - 3 levels
+
+    if args.circ_type == 3:
+        baseline_type = 1 # 1 - bottom to top,
+    elif args.circ_type == 1:
+        baseline_type = 2 # 2 top to bottom
+    elif args.circ_type == 2:
+        baseline_type = 0 # 0 - usual baseline
+    else:
+        print("Invalid Circular Type. Choose among (circ1,circ2,circ3).")
+        print('Using default circ2')
+        baseline_type = 0 # 0 - usual baseline
+
+    if args.azimuth_type == 0:
+        azimuth_type = 0 # 1 - bottom to top,
+    elif args.azimuth_type == 1:
+        azimuth_type = 0 # 2 top to bottom
+    else:
+        print("Invalid Azimuth Type. Choose 0 or 1.")
+        print('Using default 0')
+        azimuth_type = 0  # 0 - usual baseline
+
+    if args.distance_levels == 3:
+        distance_levels_num = 3
+    elif args.distance_levels == 2:
+        distance_levels_num = 2
+    else:
+        print("Invalid distance_levels. Choose 2 or 3.")
+        print('Using default 3')
+        distance_levels_num = 3
+
+    # baseline_type = 0 # 0 - usual baseline, # 1 - bottom to top, # 2 top to bottom
+    # azimuth_type = 0 # 0 - 45 deg resolution, 1 - 22.5 deg res
+    # distance_levels_num = 3 # 2 - 2 levels, # 3 - 3 levels
 
     print('Baseline type:', baseline_type)
     print('Distance levels num:', distance_levels_num)
@@ -407,13 +426,6 @@ if __name__ == '__main__':
                 if done ==True:
                     ob = env.reset()
         elif baseline_type == 2:
-
-    		# [45, 0, 0],
-    		# [-45, 0, 0],
-    		# [0, 25, 0],
-    		# [0, -25, 0],
-    		# [0, 0, -25],
-    		# [0, 0, 25]
             '''for 45 azimuth resolution '''
             steps = 0
             print('steps', steps)
