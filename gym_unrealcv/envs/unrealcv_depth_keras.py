@@ -114,7 +114,6 @@ class depthFusion_keras(gym.Env):
         print('pose new', pose_new)
 
         collision, move_dist = self.unrealcv.move_rel2(self.cam_id, pose_new[0], pose_new[1], pose_new[2])
-
         self.pose_prev =pose_new
         state = self.unrealcv.get_observation(self.cam_id, self.observation_type)
         depth_pt = self.unrealcv.read_depth(self.cam_id,mode='depthFusion')
@@ -257,7 +256,7 @@ class depthFusion_keras(gym.Env):
        with tf.device('/gpu:0'):
            sess = K.get_session()
            with sess.as_default():
-               _,_,retc,_=self.nn_distance(output,self.gt_pcl)
+               _,_,retc,_ = self.nn_distance(output,self.gt_pcl)
                dist_thresh = tf.greater(0.0008, retc)
                dist_mean = tf.reduce_mean(tf.cast(dist_thresh, tf.float32))
                coverage = tf.Tensor.eval(dist_mean)
