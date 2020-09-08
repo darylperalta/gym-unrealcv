@@ -144,6 +144,6 @@ cd example/circular_agent
 python circular_agent_baseline.py
 ```
 
-## Notes on chamfer distance computation
+## Notes on surface coverage computation
 
-Computation of Chamfer Distance was based on [Pointnet Autoencoder](https://github.com/charlesq34/pointnet-autoencoder). The default [tf_operators](gym_unrealcv/envs/utils/tf_nndistance_so.so) in this repo were compiled for CUDA 8. You can recompile for other CUDA versions using the code in [Pointnet Autoencoder](https://github.com/charlesq34/pointnet-autoencoder).
+Computation of surface coverage using GPU was based on the implementation of Chamfer Distance from [Pointnet Autoencoder](https://github.com/charlesq34/pointnet-autoencoder). The default [tf_operators](gym_unrealcv/envs/utils/tf_nndistance_so.so) in this repo were compiled for CUDA 8. You can recompile for other CUDA versions using the code in [Pointnet Autoencoder](https://github.com/charlesq34/pointnet-autoencoder).
